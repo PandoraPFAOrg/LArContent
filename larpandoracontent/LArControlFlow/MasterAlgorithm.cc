@@ -650,40 +650,62 @@ StatusCode MasterAlgorithm::Reset()
 
 StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit) const
 {
-    const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
-    if (pLArCaloHit == nullptr)
+    switch (pCaloHit->GetHitType())
     {
-        std::cout << "MasterAlgorithm: Could not cast CaloHit to LArCaloHit" << std::endl;
-        return STATUS_CODE_INVALID_PARAMETER;
+        case OPTICAL_SIPM:
+        case OPTICAL_TRAP:
+        case OPTICAL_TPC:
+        {
+            const LArOpHit *const pLArOpHit{dynamic_cast<const LArOpHit *>(pCaloHit)};
+            if (!pLArOpHit)
+            {
+                std::cout << "MasterAlgorithm: Could not cast CaloHit to LArOpHit" << std::endl;
+                return STATUS_CODE_INVALID_PARAMETER;
+            }
+            LArHitParameters parameters;
+            pLArOpHit->FillParameters(parameters);
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larHitFactory));
+            break;
+        }
+        default:
+        {
+            const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
+            if (!pLArCaloHit)
+            {
+                std::cout << "MasterAlgorithm: Could not cast CaloHit to LArCaloHit" << std::endl;
+                return STATUS_CODE_INVALID_PARAMETER;
+            }
+            LArHitParameters parameters;
+            pLArCaloHit->FillParameters(parameters);
+
+            // For merged worker instances, remap the hit's volume ids to match the merged LArTPC's renumbered readout volumes
+            if ((pPandora == m_pSlicingWorkerInstance) || (pPandora == m_pSliceNuWorkerInstance) || (pPandora == m_pSliceCRWorkerInstance))
+            {
+                const auto offsetIter(m_daughterVolumeIdOffsetMap.find(pLArCaloHit->GetLArTPCVolumeId()));
+
+                if (m_daughterVolumeIdOffsetMap.end() == offsetIter)
+                    return STATUS_CODE_FAILURE;
+
+                parameters.m_larTPCVolumeId = 0;
+                parameters.m_daughterVolumeId = offsetIter->second + pLArCaloHit->GetDaughterVolumeId();
+            }
+
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larHitFactory));
+            break;
+        }
     }
-    LArCaloHitParameters parameters;
-    pLArCaloHit->FillParameters(parameters);
-
-    // For merged worker instances, remap the hit's volume ids to match the merged LArTPC's renumbered readout volumes
-    if ((pPandora == m_pSlicingWorkerInstance) || (pPandora == m_pSliceNuWorkerInstance) || (pPandora == m_pSliceCRWorkerInstance))
-    {
-        const auto offsetIter(m_daughterVolumeIdOffsetMap.find(pLArCaloHit->GetLArTPCVolumeId()));
-
-        if (m_daughterVolumeIdOffsetMap.end() == offsetIter)
-            return STATUS_CODE_FAILURE;
-
-        parameters.m_larTPCVolumeId = 0;
-        parameters.m_daughterVolumeId = offsetIter->second + pLArCaloHit->GetDaughterVolumeId();
-    }
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
     if (m_passMCParticlesToWorkerInstances)
     {
         MCParticleVector mcParticleVector;
-        for (const auto &weightMapEntry : pLArCaloHit->GetMCParticleWeightMap())
+        for (const auto &weightMapEntry : pCaloHit->GetMCParticleWeightMap())
             mcParticleVector.push_back(weightMapEntry.first);
         std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
 
         for (const MCParticle *const pMCParticle : mcParticleVector)
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                PandoraApi::SetCaloHitToMCParticleRelationship(*pPandora, pLArCaloHit, pMCParticle, pLArCaloHit->GetMCParticleWeightMap().at(pMCParticle)));
+                PandoraApi::SetCaloHitToMCParticleRelationship(*pPandora, pCaloHit, pMCParticle, pCaloHit->GetMCParticleWeightMap().at(pMCParticle)));
         }
     }
 

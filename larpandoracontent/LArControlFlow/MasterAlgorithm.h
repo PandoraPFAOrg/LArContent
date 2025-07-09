@@ -363,7 +363,7 @@ protected:
     std::string m_recreatedVertexListName;  ///< The output recreated vertex list name
 
     float m_inTimeMaxX0;                   ///< Cut on X0 to determine whether particle is clear cosmic ray
-    LArCaloHitFactory m_larCaloHitFactory; ///< Factory for creating LArCaloHits during hit copying
+    LArHitFactory m_larHitFactory; ///< Factory for creating LAr Hits during hit copying
 };
 
 } // namespace lar_content
