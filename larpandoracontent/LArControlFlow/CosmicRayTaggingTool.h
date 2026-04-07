@@ -32,7 +32,7 @@ public:
     pandora::StatusCode Initialize();
     void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos, const MasterAlgorithm *const pAlgorithm);
 
-private:
+protected:
     /**
      *  @brief  Class to encapsulate the logic required determine if a Pfo should or shouldn't be tagged as a cosmic ray
      */
