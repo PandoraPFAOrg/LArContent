@@ -52,6 +52,7 @@
 
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
 #include "larpandoracontent/LArMonitoring/EventClusterValidationAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/GroundTruthMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/HierarchyMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/HierarchyValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
@@ -242,6 +243,7 @@
     d("LArEventClusterValidation",              EventClusterValidationAlgorithm)                                                \
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
+    d("LArGroundTruthMonitoring",               GroundTruthMonitoringAlgorithm)                                                 \
     d("LArHierarchyMonitoring",                 HierarchyMonitoringAlgorithm)                                                   \
     d("LArHierarchyValidation",                 HierarchyValidationAlgorithm)                                                   \
     d("LArPfoValidation",                       PfoValidationAlgorithm)                                                         \
