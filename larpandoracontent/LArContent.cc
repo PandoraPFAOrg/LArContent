@@ -194,6 +194,7 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/ProvisionalClusteringAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterCreation/TutorialClusteringAlgorithm.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeClusterMopUpAlgorithm.h"
@@ -323,6 +324,7 @@
     d("LArProvisionalClustering",               ProvisionalClusteringAlgorithm)                                                 \
     d("LArSimpleClusterCreation",               SimpleClusterCreationAlgorithm)                                                 \
     d("LArTrackClusterCreation",                TrackClusterCreationAlgorithm)                                                  \
+    d("LArTutorialClustering",                  TutorialClusteringAlgorithm)                                                    \
     d("LArClusteringParent",                    ClusteringParentAlgorithm)                                                      \
     d("LArBoundedClusterMopUp",                 BoundedClusterMopUpAlgorithm)                                                   \
     d("LArConeClusterMopUp",                    ConeClusterMopUpAlgorithm)                                                      \
