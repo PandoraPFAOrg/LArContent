@@ -189,6 +189,7 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TutorialClusterMergingAlgorithm.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/ProvisionalClusteringAlgorithm.h"
@@ -321,6 +322,7 @@
     d("LArSimpleClusterMerging",                SimpleClusterMergingAlgorithm)                                                  \
     d("LArTransverseAssociation",               TransverseAssociationAlgorithm)                                                 \
     d("LArTransverseExtension",                 TransverseExtensionAlgorithm)                                                   \
+    d("LArTutorialClusterMerging",              TutorialClusterMergingAlgorithm)                                                \
     d("LArProvisionalClustering",               ProvisionalClusteringAlgorithm)                                                 \
     d("LArSimpleClusterCreation",               SimpleClusterCreationAlgorithm)                                                 \
     d("LArTrackClusterCreation",                TrackClusterCreationAlgorithm)                                                  \
