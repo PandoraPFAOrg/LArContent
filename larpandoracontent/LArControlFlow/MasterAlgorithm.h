@@ -140,7 +140,7 @@ protected:
      *  @param  clearCosmicRayPfos to receive the list of clear cosmic-ray pfos
      *  @param  ambiguousPfos to receive the list of ambiguous cosmic-ray pfos for further analysis
      */
-    pandora::StatusCode TagCosmicRayPfos(
+    virtual pandora::StatusCode TagCosmicRayPfos(
         const PfoToFloatMap &stitchedPfosToX0Map, pandora::PfoList &clearCosmicRayPfos, pandora::PfoList &ambiguousPfos) const;
 
     /**
