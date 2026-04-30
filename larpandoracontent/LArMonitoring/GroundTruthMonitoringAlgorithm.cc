@@ -46,7 +46,7 @@ StatusCode GroundTruthMonitoringAlgorithm::Run()
     this->MakeMCToHitsMap(wHits, wMCHitsMap);
 
     for (const auto &mcMap : {uMCHitsMap, vMCHitsMap, wMCHitsMap})
-       this->Visualize(mcMap);
+        this->Visualize(mcMap);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -60,6 +60,8 @@ void GroundTruthMonitoringAlgorithm::MakeMCToHitsMap(const CaloHitList &caloHitL
         try
         {
             const MCParticle *pMC{m_rollUp.RollUpCaloHit(pCaloHit)};
+            if (!pMC)
+                continue;
             mcMap[pMC].emplace_back(pCaloHit);
         }
         catch (const StatusCodeException &)
@@ -104,6 +106,8 @@ void GroundTruthMonitoringAlgorithm::Visualize(const LArMCParticleHelper::MCCont
     for (const auto &[pMC, caloHits] : mcMap)
     {
         const int tier{LArMCParticleHelper::GetHierarchyTier(pMC)};
+        if (tierToMCMap.find(tier) == tierToMCMap.end())
+            tierToMCMap[tier] = MCParticleList();
         tierToMCMap[tier].emplace_back(pMC);
     }
 
