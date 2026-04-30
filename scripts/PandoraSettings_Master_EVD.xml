@@ -12,12 +12,14 @@
         <FilteredCaloHitListName>CaloHitList2D</FilteredCaloHitListName>
         <CurrentCaloHitListReplacement>CaloHitList2D</CurrentCaloHitListReplacement>
     </algorithm>
-    <algorithm type = "LArGroundTruthMonitoring" />
+    <algorithm type = "LArVisualMonitoring">
+        <CaloHitListNames>CaloHitListU CaloHitListV CaloHitListW</CaloHitListNames>
+        <ShowDetector>true</ShowDetector>
+    </algorithm>
 
     <algorithm type = "LArDLMaster">
-        <LArCaloHitVersion>2</LArCaloHitVersion>
         <CRSettingsFile>PandoraSettings_Cosmic_DUNEFD.xml</CRSettingsFile>
-        <NuSettingsFile>PandoraSettings_Neutrino_DUNEFD_Reduced.xml</NuSettingsFile>
+        <NuSettingsFile>PandoraSettings_Neutrino_EVD.xml</NuSettingsFile>
         <SlicingSettingsFile>PandoraSettings_Slicing_Standard.xml</SlicingSettingsFile>
         <StitchingTools>
             <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>true</ThreeDStitchingMode></tool>
@@ -31,11 +33,15 @@
         </SliceIdTools>
         <InputHitListName>CaloHitList2D</InputHitListName>
         <InputMCParticleListName>Input</InputMCParticleListName>
-        <PassMCParticlesToWorkerInstances>false</PassMCParticlesToWorkerInstances>
+        <PassMCParticlesToWorkerInstances>true</PassMCParticlesToWorkerInstances>
         <RecreatedPfoListName>RecreatedPfos</RecreatedPfoListName>
         <RecreatedClusterListName>RecreatedClusters</RecreatedClusterListName>
         <RecreatedVertexListName>RecreatedVertices</RecreatedVertexListName>
         <VisualizeOverallRecoStatus>false</VisualizeOverallRecoStatus>
     </algorithm>
 
+    <algorithm type = "LArVisualMonitoring">
+        <ShowCurrentPfos>true</ShowCurrentPfos>
+        <ShowDetector>true</ShowDetector>
+    </algorithm>
 </pandora>

@@ -1,0 +1,659 @@
+<pandora>
+    <!-- GLOBAL SETTINGS -->
+    <IsMonitoringEnabled>true</IsMonitoringEnabled>
+    <ShouldDisplayAlgorithmInfo>false</ShouldDisplayAlgorithmInfo>
+    <SingleHitTypeClusteringMode>true</SingleHitTypeClusteringMode>
+
+    <!-- ALGORITHM SETTINGS -->
+    <algorithm type = "LArPreProcessing">
+        <OutputCaloHitListNameU>CaloHitListU</OutputCaloHitListNameU>
+        <OutputCaloHitListNameV>CaloHitListV</OutputCaloHitListNameV>
+        <OutputCaloHitListNameW>CaloHitListW</OutputCaloHitListNameW>
+        <FilteredCaloHitListName>CaloHitList2D</FilteredCaloHitListName>
+        <CurrentCaloHitListReplacement>CaloHitList2D</CurrentCaloHitListReplacement>
+    </algorithm>
+
+    <algorithm type = "LArDLVertexing">
+        <TrainingMode>false</TrainingMode>
+        <OutputVertexListName>NeutrinoVertices3D_Pass1</OutputVertexListName>
+        <CaloHitListNames>CaloHitListW CaloHitListU CaloHitListV</CaloHitListNames>
+        <ModelFileNameU>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_1_U_v04_06_00.pt</ModelFileNameU>
+        <ModelFileNameV>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_1_V_v04_06_00.pt</ModelFileNameV>
+        <ModelFileNameW>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_1_W_v04_06_00.pt</ModelFileNameW>
+        <DistanceThresholds>0. 0.00275 0.00825 0.01925 0.03575 0.05775 0.08525 0.12375 0.15125 0.20625 0.26125 0.31625 0.37125 0.42625 0.50875 0.59125 0.67375 0.75625 0.85 1.0</DistanceThresholds>
+        <Visualise>false</Visualise>
+    </algorithm>
+
+    <algorithm type = "LArDLVertexing">
+        <TrainingMode>false</TrainingMode>
+        <Pass>2</Pass>
+        <InputVertexListName>NeutrinoVertices3D_Pass1</InputVertexListName>
+        <OutputVertexListName>NeutrinoVertices3D</OutputVertexListName>
+        <CaloHitListNames>CaloHitListW CaloHitListU CaloHitListV</CaloHitListNames>
+        <ModelFileNameU>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_2_U_v04_06_00.pt</ModelFileNameU>
+        <ModelFileNameV>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_2_V_v04_06_00.pt</ModelFileNameV>
+        <ModelFileNameW>PandoraNetworkData/PandoraNet_Vertex_DUNEFD_HD_Accel_2_W_v04_06_00.pt</ModelFileNameW>
+        <ImageWidth>128</ImageWidth>
+        <ImageHeight>128</ImageHeight>
+        <DistanceThresholds>0. 0.00275 0.00825 0.01925 0.03575 0.05775 0.08525 0.12375 0.15125 0.20625 0.26125 0.31625 0.37125 0.42625 0.50875 0.59125 0.67375 0.75625 0.85 1.0</DistanceThresholds>
+        <Visualise>false</Visualise>
+    </algorithm>
+
+    <!-- TwoDReconstruction -->
+    <algorithm type = "LArClusteringParent">
+        <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
+        <InputCaloHitListName>CaloHitListU</InputCaloHitListName>
+        <ClusterListName>ClustersU</ClusterListName>
+        <ReplaceCurrentCaloHitList>true</ReplaceCurrentCaloHitList>
+        <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+    </algorithm>
+    <algorithm type = "LArLayerSplitting"/>
+    <algorithm type = "LArLongitudinalAssociation"/>
+    <algorithm type = "LArTransverseAssociation"/>
+    <algorithm type = "LArLongitudinalExtension"/>
+    <algorithm type = "LArTransverseExtension"/>
+    <algorithm type = "LArCrossGapsAssociation"/>
+    <algorithm type = "LArCrossGapsExtension"/>
+    <algorithm type = "LArOvershootSplitting"/>
+    <algorithm type = "LArBranchSplitting"/>
+    <algorithm type = "LArKinkSplitting"/>
+    <algorithm type = "LArTrackConsolidation">
+        <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
+    </algorithm>
+    <algorithm type = "LArHitWidthClusterMerging"/>
+
+    <algorithm type = "LArClusteringParent">
+        <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
+        <InputCaloHitListName>CaloHitListV</InputCaloHitListName>
+        <ClusterListName>ClustersV</ClusterListName>
+        <ReplaceCurrentCaloHitList>true</ReplaceCurrentCaloHitList>
+        <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+    </algorithm>
+    <algorithm type = "LArLayerSplitting"/>
+    <algorithm type = "LArLongitudinalAssociation"/>
+    <algorithm type = "LArTransverseAssociation"/>
+    <algorithm type = "LArLongitudinalExtension"/>
+    <algorithm type = "LArTransverseExtension"/>
+    <algorithm type = "LArCrossGapsAssociation"/>
+    <algorithm type = "LArCrossGapsExtension"/>
+    <algorithm type = "LArOvershootSplitting"/>
+    <algorithm type = "LArBranchSplitting"/>
+    <algorithm type = "LArKinkSplitting"/>
+    <algorithm type = "LArTrackConsolidation">
+        <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
+    </algorithm>
+    <algorithm type = "LArHitWidthClusterMerging"/>
+
+    <algorithm type = "LArClusteringParent">
+        <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
+        <InputCaloHitListName>CaloHitListW</InputCaloHitListName>
+        <ClusterListName>ClustersW</ClusterListName>
+        <ReplaceCurrentCaloHitList>true</ReplaceCurrentCaloHitList>
+        <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
+    </algorithm>
+    <algorithm type = "LArLayerSplitting"/>
+    <algorithm type = "LArLongitudinalAssociation"/>
+    <algorithm type = "LArTransverseAssociation"/>
+    <algorithm type = "LArLongitudinalExtension"/>
+    <algorithm type = "LArTransverseExtension"/>
+    <algorithm type = "LArCrossGapsAssociation"/>
+    <algorithm type = "LArCrossGapsExtension"/>
+    <algorithm type = "LArOvershootSplitting"/>
+    <algorithm type = "LArBranchSplitting"/>
+    <algorithm type = "LArKinkSplitting"/>
+    <algorithm type = "LArTrackConsolidation">
+        <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
+    </algorithm>
+    <algorithm type = "LArHitWidthClusterMerging"/>
+
+    <!-- VertexAlgorithms -->
+    <algorithm type = "LArVertexSplitting">
+        <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+    </algorithm>
+
+    <algorithm type = "LArDLTwoDShowerGrowing">
+        <ClusterListNames>ClustersU ClustersV ClustersW</ClusterListNames>
+        <VertexListName>NeutrinoVertices3D</VertexListName>
+        <ModelEncoderFileName>PandoraNetworkData/PandoraNet_ShowerGrowing_DUNEFD_HD_Encoder_v05_00_00.pt</ModelEncoderFileName>
+        <ModelAttnFileName>PandoraNetworkData/PandoraNet_ShowerGrowing_DUNEFD_HD_Attn_v05_00_00.pt</ModelAttnFileName>
+        <ModelSimFileName>PandoraNetworkData/PandoraNet_ShowerGrowing_DUNEFD_HD_Sim_v05_00_00.pt</ModelSimFileName>
+        <SimilarityThreshold>0.60</SimilarityThreshold>
+        <SimilarityThresholdBeta>1.0</SimilarityThresholdBeta>
+        <AccessoryClusterMaxHits>2</AccessoryClusterMaxHits>
+        <MaxIterations>10</MaxIterations>
+        <PolarRScaleFactor>0.0005044863</PolarRScaleFactor>
+        <CartesianXScaleFactor>0.001378694</CartesianXScaleFactor>
+        <CartesianZScaleFactor>0.0007171852</CartesianZScaleFactor>
+    </algorithm>
+
+    <!-- ThreeDTrackAlgorithms -->
+    <algorithm type = "LArThreeDTransverseTracks">
+        <InputClusterListNameU>ClustersU</InputClusterListNameU>
+        <InputClusterListNameV>ClustersV</InputClusterListNameV>
+        <InputClusterListNameW>ClustersW</InputClusterListNameW>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+        <TrackTools>
+            <tool type = "LArClearTracks"/>
+            <tool type = "LArLongTracks"/>
+            <tool type = "LArOvershootTracks"><SplitMode>true</SplitMode></tool>
+            <tool type = "LArUndershootTracks"><SplitMode>true</SplitMode></tool>
+            <tool type = "LArOvershootTracks"><SplitMode>false</SplitMode></tool>
+            <tool type = "LArUndershootTracks"><SplitMode>false</SplitMode></tool>
+            <tool type = "LArMissingTrackSegment"/>
+            <tool type = "LArTrackSplitting"/>
+            <tool type = "LArLongTracks"><MinMatchedFraction>0.75</MinMatchedFraction><MinXOverlapFraction>0.75</MinXOverlapFraction></tool>
+            <tool type = "LArTracksCrossingGaps"><MinMatchedFraction>0.75</MinMatchedFraction><MinXOverlapFraction>0.75</MinXOverlapFraction></tool>
+            <tool type = "LArMissingTrack"/>
+        </TrackTools>
+    </algorithm>
+    <algorithm type = "LArThreeDLongitudinalTracks">
+        <InputClusterListNameU>ClustersU</InputClusterListNameU>
+        <InputClusterListNameV>ClustersV</InputClusterListNameV>
+        <InputClusterListNameW>ClustersW</InputClusterListNameW>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+        <TrackTools>
+            <tool type = "LArClearLongitudinalTracks"/>
+            <tool type = "LArMatchedEndPoints"/>
+        </TrackTools>
+    </algorithm>
+
+    <!-- ThreeDShowerAlgorithms -->
+    <algorithm type = "LArCutPfoCharacterisation">
+        <TrackPfoListName>TrackParticles3D</TrackPfoListName>
+        <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
+        <UseThreeDInformation>false</UseThreeDInformation>
+        <MaxShowerLengthCut>500.</MaxShowerLengthCut>
+        <VertexDistanceRatioCut>500.</VertexDistanceRatioCut>
+    </algorithm>
+    <algorithm type = "LArListDeletion">
+        <PfoListNames>ShowerParticles3D</PfoListNames>
+    </algorithm>
+    <algorithm type = "LArCutClusterCharacterisation">
+        <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+        <OverwriteExistingId>true</OverwriteExistingId>
+        <MaxShowerLengthCut>500.</MaxShowerLengthCut>
+        <VertexDistanceRatioCut>500.</VertexDistanceRatioCut>
+        <PathLengthRatioCut>1.012</PathLengthRatioCut>
+        <ShowerWidthRatioCut>0.2</ShowerWidthRatioCut>
+    </algorithm>
+    <algorithm type = "LArThreeDShowers">
+        <InputClusterListNameU>ClustersU</InputClusterListNameU>
+        <InputClusterListNameV>ClustersV</InputClusterListNameV>
+        <InputClusterListNameW>ClustersW</InputClusterListNameW>
+        <OutputPfoListName>ShowerParticles3D</OutputPfoListName>
+        <ShowerTools>
+            <tool type = "LArClearShowers"/>
+            <tool type = "LArSplitShowers"/>
+            <tool type = "LArSimpleShowers"/>
+        </ShowerTools>
+    </algorithm>
+
+    <!-- TwoViewTrackAlgorithms out-of-the-box for showers - U and V -->
+    <algorithm type = "LArTwoViewTransverseTracks">
+        <InputClusterListName1>ClustersU</InputClusterListName1>
+        <InputClusterListName2>ClustersV</InputClusterListName2>
+        <OutputPfoListName>ShowerParticles3D</OutputPfoListName>
+        <LocalMatchingScoreThreshold>0.90</LocalMatchingScoreThreshold>
+        <MinSamples>13</MinSamples>
+        <TrackTools>
+            <tool type = "LArTwoViewThreeDKink"/>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.0</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.30</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinMatchedFraction>0.30</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinMatchedFraction>0.0</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewSimpleTracks"/>
+        </TrackTools>
+    </algorithm>
+
+    <!-- TwoViewTrackAlgorithms out-of-the-box for showers - U and W -->
+    <algorithm type = "LArTwoViewTransverseTracks">
+        <InputClusterListName1>ClustersU</InputClusterListName1>
+        <InputClusterListName2>ClustersW</InputClusterListName2>
+        <OutputPfoListName>ShowerParticles3D</OutputPfoListName>
+        <LocalMatchingScoreThreshold>0.90</LocalMatchingScoreThreshold>
+        <MinSamples>13</MinSamples>
+        <TrackTools>
+            <tool type = "LArTwoViewThreeDKink"/>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.0</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.30</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinMatchedFraction>0.30</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinMatchedFraction>0.0</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewSimpleTracks"/>
+        </TrackTools>
+    </algorithm>
+
+    <!-- TwoViewTrackAlgorithms out-of-the-box for showers - V and W -->
+    <algorithm type = "LArTwoViewTransverseTracks">
+        <InputClusterListName1>ClustersV</InputClusterListName1>
+        <InputClusterListName2>ClustersW</InputClusterListName2>
+        <OutputPfoListName>ShowerParticles3D</OutputPfoListName>
+        <LocalMatchingScoreThreshold>0.90</LocalMatchingScoreThreshold>
+        <MinSamples>13</MinSamples>
+        <TrackTools>
+            <tool type = "LArTwoViewThreeDKink"/>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.0</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.30</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinMatchedFraction>0.30</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinMatchedFraction>0.0</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewSimpleTracks"/>
+        </TrackTools>
+    </algorithm>
+
+    <!-- Repeat ThreeDTrackAlgorithms -->
+    <algorithm type = "LArThreeDTransverseTracks">
+        <InputClusterListNameU>ClustersU</InputClusterListNameU>
+        <InputClusterListNameV>ClustersV</InputClusterListNameV>
+        <InputClusterListNameW>ClustersW</InputClusterListNameW>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+        <TrackTools>
+            <tool type = "LArClearTracks"/>
+            <tool type = "LArLongTracks"/>
+            <tool type = "LArOvershootTracks"><SplitMode>true</SplitMode></tool>
+            <tool type = "LArUndershootTracks"><SplitMode>true</SplitMode></tool>
+            <tool type = "LArOvershootTracks"><SplitMode>false</SplitMode></tool>
+            <tool type = "LArUndershootTracks"><SplitMode>false</SplitMode></tool>
+            <tool type = "LArMissingTrackSegment"/>
+            <tool type = "LArTrackSplitting"/>
+            <tool type = "LArLongTracks"><MinMatchedFraction>0.75</MinMatchedFraction><MinXOverlapFraction>0.75</MinXOverlapFraction></tool>
+            <tool type = "LArTracksCrossingGaps"><MinMatchedFraction>0.75</MinMatchedFraction><MinXOverlapFraction>0.75</MinXOverlapFraction></tool>
+            <tool type = "LArMissingTrack"/>
+        </TrackTools>
+    </algorithm>
+    <algorithm type = "LArThreeDLongitudinalTracks">
+        <InputClusterListNameU>ClustersU</InputClusterListNameU>
+        <InputClusterListNameV>ClustersV</InputClusterListNameV>
+        <InputClusterListNameW>ClustersW</InputClusterListNameW>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+        <TrackTools>
+            <tool type = "LArClearLongitudinalTracks"/>
+            <tool type = "LArMatchedEndPoints"/>
+        </TrackTools>
+    </algorithm>
+    <algorithm type = "LArThreeDTrackFragments">
+        <MinClusterLength>5.</MinClusterLength>
+        <InputClusterListNameU>ClustersU</InputClusterListNameU>
+        <InputClusterListNameV>ClustersV</InputClusterListNameV>
+        <InputClusterListNameW>ClustersW</InputClusterListNameW>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+        <TrackTools>
+            <tool type = "LArClearTrackFragments"/>
+        </TrackTools>
+        <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
+    </algorithm>
+
+    <!-- TwoViewTrackAlgorithms for U and V -->
+    <algorithm type = "LArTwoViewTransverseTracks">
+        <InputClusterListName1>ClustersU</InputClusterListName1>
+        <InputClusterListName2>ClustersV</InputClusterListName2>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+        <TrackTools>
+            <tool type = "LArTwoViewThreeDKink"/>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.0</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.30</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinMatchedFraction>0.30</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinMatchedFraction>0.0</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewSimpleTracks"/>
+        </TrackTools>
+    </algorithm>
+
+    <!-- TwoViewTrackAlgorithms for U and W -->
+    <algorithm type = "LArTwoViewTransverseTracks">
+        <InputClusterListName1>ClustersU</InputClusterListName1>
+        <InputClusterListName2>ClustersW</InputClusterListName2>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+        <TrackTools>
+            <tool type = "LArTwoViewThreeDKink"/>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.0</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.30</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinMatchedFraction>0.30</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinMatchedFraction>0.0</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewSimpleTracks"/>
+        </TrackTools>
+    </algorithm>
+
+    <!-- TwoViewTrackAlgorithms for V and W -->
+    <algorithm type = "LArTwoViewTransverseTracks">
+        <InputClusterListName1>ClustersV</InputClusterListName1>
+        <InputClusterListName2>ClustersW</InputClusterListName2>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+        <TrackTools>
+            <tool type = "LArTwoViewThreeDKink"/>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.0</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewClearTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinLocallyMatchedFraction>0.30</MinLocallyMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.0</MinMatchingScore>
+                <MinMatchedFraction>0.30</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewLongTracks">
+                <MinMatchingScore>0.95</MinMatchingScore>
+                <MinMatchedFraction>0.0</MinMatchedFraction>
+            </tool>
+            <tool type = "LArTwoViewSimpleTracks"/>
+        </TrackTools>
+    </algorithm>
+
+    <!-- ThreeDRecoveryAlgorithms -->
+    <algorithm type = "LArVertexBasedPfoRecovery">
+        <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+    </algorithm>
+    <algorithm type = "LArParticleRecovery">
+        <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+    </algorithm>
+    <algorithm type = "LArParticleRecovery">
+        <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+        <OutputPfoListName>TrackParticles3D</OutputPfoListName>
+        <VertexClusterMode>true</VertexClusterMode>
+        <MinXOverlapFraction>0.5</MinXOverlapFraction>
+        <MinClusterCaloHits>5</MinClusterCaloHits>
+        <MinClusterLength>1.</MinClusterLength>
+    </algorithm>
+
+    <!-- TwoDMopUpAlgorithms -->
+    <algorithm type = "LArBoundedClusterMopUp">
+        <PfoListNames>ShowerParticles3D</PfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+    </algorithm>
+    <algorithm type = "LArConeClusterMopUp">
+        <PfoListNames>ShowerParticles3D</PfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+    </algorithm>
+    <algorithm type = "LArNearbyClusterMopUp">
+        <PfoListNames>ShowerParticles3D</PfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+    </algorithm>
+
+    <!-- ThreeDHitAlgorithms -->
+    <algorithm type = "LArCutPfoCharacterisation">
+        <TrackPfoListName>TrackParticles3D</TrackPfoListName>
+        <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
+        <PostBranchAddition>true</PostBranchAddition>
+        <UseThreeDInformation>false</UseThreeDInformation>
+        <MaxShowerLengthCut>500.</MaxShowerLengthCut>
+        <VertexDistanceRatioCut>500.</VertexDistanceRatioCut>
+        <DTDLWidthRatioCut>0.08</DTDLWidthRatioCut>
+    </algorithm>
+    <algorithm type = "LArThreeDHitCreation">
+        <InputPfoListName>TrackParticles3D</InputPfoListName>
+        <OutputCaloHitListName>TrackCaloHits3D</OutputCaloHitListName>
+        <OutputClusterListName>TrackClusters3D</OutputClusterListName>
+        <HitCreationTools>
+            <tool type = "LArClearTransverseTrackHits"><MinViews>3</MinViews></tool>
+            <tool type = "LArClearLongitudinalTrackHits"><MinViews>3</MinViews></tool>
+            <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>3</MinViews></tool>
+            <tool type = "LArMultiValuedTransverseTrackHits"><MinViews>3</MinViews></tool>
+            <tool type = "LArClearTransverseTrackHits"><MinViews>2</MinViews></tool>
+            <tool type = "LArClearLongitudinalTrackHits"><MinViews>2</MinViews></tool>
+            <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>2</MinViews></tool>
+        </HitCreationTools>
+    </algorithm>
+    <algorithm type = "LArThreeDHitCreation">
+        <InputPfoListName>ShowerParticles3D</InputPfoListName>
+        <OutputCaloHitListName>ShowerCaloHits3D</OutputCaloHitListName>
+        <OutputClusterListName>ShowerClusters3D</OutputClusterListName>
+        <HitCreationTools>
+            <tool type = "LArThreeViewShowerHits"/>
+            <tool type = "LArTwoViewShowerHits"/>
+            <tool type = "LArDeltaRayShowerHits"/>
+        </HitCreationTools>
+    </algorithm>
+
+    <!-- ThreeDMopUpAlgorithms -->
+    <algorithm type = "LArSlidingConePfoMopUp">
+        <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</DaughterListNames>
+    </algorithm>
+    <algorithm type = "LArSlidingConeClusterMopUp">
+        <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+    </algorithm>
+    <algorithm type = "LArIsolatedClusterMopUp">
+        <PfoListNames>TrackParticles3D ShowerParticles3D</PfoListNames>
+        <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+        <AddHitsAsIsolated>true</AddHitsAsIsolated>
+    </algorithm>
+
+    <algorithm type = "LArBdtPfoCharacterisation">
+        <TrackPfoListName>TrackParticles3D</TrackPfoListName>
+        <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
+        <MCParticleListName>Input</MCParticleListName>
+        <CaloHitListName>CaloHitList2D</CaloHitListName>
+        <UseThreeDInformation>true</UseThreeDInformation>
+        <MvaFileName>PandoraMVAData/PandoraBdt_PfoCharacterisation_DUNEFD_HD_v04_06_00.xml</MvaFileName>
+        <MvaName>PreHierarchy</MvaName>
+        <MvaFileNameNoChargeInfo>PandoraMVAData/PandoraBdt_PfoCharacterisation_DUNEFD_HD_v04_06_00.xml</MvaFileNameNoChargeInfo>
+        <MvaNameNoChargeInfo>PreHierarchy_NoChargeInfo</MvaNameNoChargeInfo>
+        <TrainingSetMode>false</TrainingSetMode>
+        <TrainingOutputFileName>training_output</TrainingOutputFileName>
+        <PersistFeatures>true</PersistFeatures>
+        <FeatureTools>
+            <tool type = "LArThreeDLinearFitFeatureTool"/>
+            <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+            <tool type = "LArThreeDPCAFeatureTool"/>
+            <tool type = "LArPfoHierarchyFeatureTool"/>
+            <tool type = "LArThreeDOpeningAngleFeatureTool">
+                <HitFraction>0.2</HitFraction>
+            </tool>
+            <tool type = "LArThreeDChargeFeatureTool"/>
+        </FeatureTools>
+        <FeatureToolsNoChargeInfo>
+            <tool type = "LArThreeDLinearFitFeatureTool"/>
+            <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+            <tool type = "LArThreeDPCAFeatureTool"/>
+            <tool type = "LArPfoHierarchyFeatureTool"/>
+            <tool type = "LArThreeDOpeningAngleFeatureTool">
+                <HitFraction>0.2</HitFraction>
+            </tool>
+        </FeatureToolsNoChargeInfo>
+        <WriteToTree>false</WriteToTree>
+        <OutputTree>tree</OutputTree>
+        <OutputFile>tree.root</OutputFile>
+    </algorithm>
+
+    <!-- Recursively Repeat MopUpAlgorithms -->
+    <algorithm type = "LArRecursivePfoMopUp">
+        <PfoListNames>TrackParticles3D ShowerParticles3D</PfoListNames>
+        <MaxIterations>10</MaxIterations>
+        <MopUpAlgorithms>
+            <algorithm type = "LArBoundedClusterMopUp">
+                <PfoListNames>ShowerParticles3D</PfoListNames>
+                <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+            </algorithm>
+            <algorithm type = "LArConeClusterMopUp">
+                <PfoListNames>ShowerParticles3D</PfoListNames>
+                <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+            </algorithm>
+            <algorithm type = "LArNearbyClusterMopUp">
+                <PfoListNames>ShowerParticles3D</PfoListNames>
+                <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+            </algorithm>
+            <algorithm type = "LArSlidingConePfoMopUp">
+                <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
+                <DaughterListNames>ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</DaughterListNames>
+            </algorithm>
+            <algorithm type = "LArSlidingConeClusterMopUp">
+                <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
+                <DaughterListNames>ClustersU ClustersV ClustersW</DaughterListNames>
+            </algorithm>
+            <algorithm type = "LArPfoHitCleaning">
+                <PfoListNames>TrackParticles3D ShowerParticles3D</PfoListNames>
+                <ClusterListNames>TrackClusters3D ShowerClusters3D</ClusterListNames>
+            </algorithm>
+            <algorithm type = "LArThreeDHitCreation">
+                <InputPfoListName>TrackParticles3D</InputPfoListName>
+                <OutputCaloHitListName>TrackCaloHits3D</OutputCaloHitListName>
+                <OutputClusterListName>TrackClusters3D</OutputClusterListName>
+                <HitCreationTools>
+                    <tool type = "LArClearTransverseTrackHits"><MinViews>3</MinViews></tool>
+                    <tool type = "LArClearLongitudinalTrackHits"><MinViews>3</MinViews></tool>
+                    <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>3</MinViews></tool>
+                    <tool type = "LArMultiValuedTransverseTrackHits"><MinViews>3</MinViews></tool>
+                    <tool type = "LArClearTransverseTrackHits"><MinViews>2</MinViews></tool>
+                    <tool type = "LArClearLongitudinalTrackHits"><MinViews>2</MinViews></tool>
+                    <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>2</MinViews></tool>
+                </HitCreationTools>
+            </algorithm>
+            <algorithm type = "LArThreeDHitCreation">
+                <InputPfoListName>ShowerParticles3D</InputPfoListName>
+                <OutputCaloHitListName>ShowerCaloHits3D</OutputCaloHitListName>
+                <OutputClusterListName>ShowerClusters3D</OutputClusterListName>
+                <HitCreationTools>
+                    <tool type = "LArThreeViewShowerHits"/>
+                    <tool type = "LArTwoViewShowerHits"/>
+                    <tool type = "LArDeltaRayShowerHits"/>
+                </HitCreationTools>
+            </algorithm>
+        </MopUpAlgorithms>
+    </algorithm>
+
+    <!-- Neutrino creation and hierarchy building -->
+    <algorithm type = "LArNeutrinoCreation">
+       <InputVertexListName>NeutrinoVertices3D</InputVertexListName>
+       <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
+    </algorithm>
+    <algorithm type = "LArDLNeutrinoHierarchy">
+       <tool type = "LArDLPrimaryHierarchy" description = "DLPrimaryHierarchyTool">
+         <PrimaryShowerClassifierModelName>PandoraNetworkData/PandoraNet_Hierarchy_DUNEFD_HD_S_Class_v014_15_00.pt</PrimaryShowerClassifierModelName>
+         <PrimaryTrackBranchModelName>PandoraNetworkData/PandoraNet_Hierarchy_DUNEFD_HD_T_Edge_v014_15_00.pt</PrimaryTrackBranchModelName>
+         <PrimaryTrackClassifierModelName>PandoraNetworkData/PandoraNet_Hierarchy_DUNEFD_HD_T_Class_v014_15_00.pt</PrimaryTrackClassifierModelName>
+       </tool>
+       <tool type = "LArDLLaterTierHierarchy" description = "DLLaterTierHierarchyTool">
+         <TrackShowerBranchModelName>PandoraNetworkData/PandoraNet_Hierarchy_DUNEFD_HD_TS_Edge_v014_15_00.pt</TrackShowerBranchModelName>
+         <TrackShowerClassifierModelName>PandoraNetworkData/PandoraNet_Hierarchy_DUNEFD_HD_TS_Class_v014_15_00.pt</TrackShowerClassifierModelName>
+         <TrackTrackBranchModelName>PandoraNetworkData/PandoraNet_Hierarchy_DUNEFD_HD_TT_Edge_v014_15_00.pt</TrackTrackBranchModelName>
+         <TrackTrackClassifierModelName>PandoraNetworkData/PandoraNet_Hierarchy_DUNEFD_HD_TT_Class_v014_15_00.pt</TrackTrackClassifierModelName>
+       </tool>
+    </algorithm>
+    <algorithm type = "LArNeutrinoDaughterVertices">
+        <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
+        <OutputVertexListName>DaughterVertices3D</OutputVertexListName>
+    </algorithm>
+
+    <algorithm type = "LArBdtPfoCharacterisation">
+        <TrackPfoListName>TrackParticles3D</TrackPfoListName>
+        <ShowerPfoListName>ShowerParticles3D</ShowerPfoListName>
+        <MCParticleListName>Input</MCParticleListName>
+        <CaloHitListName>CaloHitList2D</CaloHitListName>
+        <UseThreeDInformation>true</UseThreeDInformation>
+        <MvaFileName>PandoraMVAData/PandoraBdt_PfoCharacterisation_DUNEFD_HD_v04_06_00.xml</MvaFileName>
+        <MvaName>PostHierarchy</MvaName>
+        <MvaFileNameNoChargeInfo>PandoraMVAData/PandoraBdt_PfoCharacterisation_DUNEFD_HD_v04_06_00.xml</MvaFileNameNoChargeInfo>
+        <MvaNameNoChargeInfo>PostHierarchy_NoChargeInfo</MvaNameNoChargeInfo>
+        <TrainingSetMode>false</TrainingSetMode>
+        <TrainingOutputFileName>training_output</TrainingOutputFileName>
+        <PersistFeatures>true</PersistFeatures>
+        <FeatureTools>
+            <tool type = "LArThreeDLinearFitFeatureTool"/>
+            <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+            <tool type = "LArThreeDPCAFeatureTool"/>
+            <tool type = "LArPfoHierarchyFeatureTool"/>
+            <tool type = "LArThreeDOpeningAngleFeatureTool">
+                <HitFraction>0.2</HitFraction>
+            </tool>
+            <tool type = "LArThreeDChargeFeatureTool"/>
+        </FeatureTools>
+        <FeatureToolsNoChargeInfo>
+            <tool type = "LArThreeDLinearFitFeatureTool"/>
+            <tool type = "LArThreeDVertexDistanceFeatureTool"/>
+            <tool type = "LArThreeDPCAFeatureTool"/>
+            <tool type = "LArPfoHierarchyFeatureTool"/>
+            <tool type = "LArThreeDOpeningAngleFeatureTool">
+                <HitFraction>0.2</HitFraction>
+            </tool>
+        </FeatureToolsNoChargeInfo>
+        <WriteToTree>false</WriteToTree>
+        <OutputTree>tree</OutputTree>
+        <OutputFile>tree.root</OutputFile>
+    </algorithm>
+
+    <algorithm type = "LArShowerHierarchyMopUp">
+        <LeadingPfoListName>NeutrinoParticles3D</LeadingPfoListName>
+        <DaughterListNames>TrackParticles3D ShowerParticles3D DaughterVertices3D ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</DaughterListNames>
+    </algorithm>
+
+    <algorithm type = "LArNeutrinoProperties">
+        <NeutrinoPfoListName>NeutrinoParticles3D</NeutrinoPfoListName>
+    </algorithm>
+
+    <!-- Track and shower building -->
+    <algorithm type = "LArTrackParticleBuilding">
+        <PfoListName>TrackParticles3D</PfoListName>
+        <VertexListName>DaughterVertices3D</VertexListName>
+    </algorithm>
+
+    <!-- Output list management -->
+    <algorithm type = "LArPostProcessing">
+        <PfoListNames>NeutrinoParticles3D TrackParticles3D ShowerParticles3D</PfoListNames>
+        <VertexListNames>NeutrinoVertices3D DaughterVertices3D CandidateVertices3D</VertexListNames>
+        <ClusterListNames>ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</ClusterListNames>
+        <CaloHitListNames>CaloHitListU CaloHitListV CaloHitListW CaloHitList2D</CaloHitListNames>
+        <CurrentPfoListReplacement>NeutrinoParticles3D</CurrentPfoListReplacement>
+    </algorithm>
+</pandora>
