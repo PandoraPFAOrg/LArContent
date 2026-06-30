@@ -314,7 +314,10 @@ void ShowerValidationTool::GetRecoVertexInfo(const CartesianVector &recoShrVtx, 
     if (pMC)
     {
         const CartesianVector trueDir(pMC->GetMomentum().GetUnitVector());
-        showerTreeVars.m_recoShrDirAcc.push_back(trueDir.GetOpeningAngle(recoShrDir));
+        float recoShrDirAcc(m_invalidLargeFloat);
+        try { recoShrDirAcc = trueDir.GetOpeningAngle(recoShrDir); } 
+        catch (StatusCodeException &) { recoShrDirAcc = m_invalidLargeFloat; }
+        showerTreeVars.m_recoShrDirAcc.push_back(recoShrDirAcc);
     }
 }
 
