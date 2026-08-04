@@ -157,49 +157,41 @@ void TrackValidationTool::GetRecoVertexAndEndpointVars(const MCParticle *const p
 {
     const LArMCParticle *const pLArMC(dynamic_cast<const LArMCParticle *>(pMCParticle));
     if (!pLArMC)
-    {
         throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
+
     const bool doesMCHaveStartDir(pMCParticle->GetMomentum().GetMagnitudeSquared() > std::numeric_limits<float>::epsilon());
+    const bool doesRecoHaveStartDir(recoVertexDir.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon());
     const bool doesMCHaveEndDir(pLArMC->GetEndDirection().GetMagnitudeSquared() > std::numeric_limits<float>::epsilon());
+    const bool doesRecoHaveEndDir(recoEndpointDir.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon());    
     const CartesianVector trueEndpoint(pLArMC->GetEndpoint());
 
     // Endpoint accuracy
     float endpointAcc(m_invalidLargeFloat);
-    try
+    if (doesMCHaveEndDir)
     {
-        endpointAcc = (recoEndpoint - trueEndpoint).GetMagnitude();
-        const float sign((endpointAcc < std::numeric_limits<float>::epsilon() || !doesMCHaveEndDir)       ? 1.f
-                : (recoEndpoint - trueEndpoint).GetOpeningAngle(pLArMC->GetEndDirection()) < (M_PI * 0.5) ? 1.f
-                                                                                                          : -1.f);
-        endpointAcc *= sign;
+        const float endpointAccSq((recoEndpoint - trueEndpoint).GetMagnitudeSquared());
+        const float sign((endpointAcc < std::numeric_limits<float>::epsilon()) ? 1.f
+            : (recoEndpoint - trueEndpoint).GetOpeningAngle(pLArMC->GetEndDirection()) < (M_PI * 0.5) ? 1.f
+            : -1.f);
+        endpointAcc = std::sqrt(endpointAccSq) * sign;
     }
-    catch (StatusCodeException &) { endpointAcc = m_invalidLargeFloat; }
 
     // Start direction
-    float startDirAcc(m_invalidAngle);
-    try { startDirAcc = (doesMCHaveStartDir ? pMCParticle->GetMomentum().GetOpeningAngle(recoVertexDir) : m_invalidAngle); }
-    catch (StatusCodeException &) { startDirAcc = m_invalidAngle; }
+    const float startDirAcc((doesMCHaveStartDir && doesRecoHaveStartDir) ? pMCParticle->GetMomentum().GetOpeningAngle(recoVertexDir) : m_invalidAngle);
 
     // End direction
-    float endDirAcc(m_invalidAngle);
-    try { endDirAcc = (doesMCHaveEndDir ? pLArMC->GetEndDirection().GetOpeningAngle(recoEndpointDir) : m_invalidAngle); }
-    catch (StatusCodeException &) { endDirAcc = m_invalidAngle; }
+    const float endDirAcc((doesMCHaveEndDir && doesRecoHaveEndDir) ? pLArMC->GetEndDirection().GetOpeningAngle(recoEndpointDir) : m_invalidAngle);
 
     // Is flipped?
     int isOrientationCorrect(m_invalidInt);
-    try
-    {
-        const CartesianVector trueOrientation(trueEndpoint - pMCParticle->GetVertex());
-        const CartesianVector recoOrientation(recoEndpoint - recoVertex);
+    const CartesianVector trueOrientation(trueEndpoint - pMCParticle->GetVertex());
+    const CartesianVector recoOrientation(recoEndpoint - recoVertex);
 
-        if ((trueOrientation.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon()) &&
-            (recoOrientation.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon()))
-        {
-            isOrientationCorrect = (trueOrientation.GetOpeningAngle(recoOrientation) > (M_PI * 0.5f) ? 0 : 1);
-        }
+    if ((trueOrientation.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon()) &&
+        (recoOrientation.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon()))
+    {
+        isOrientationCorrect = (trueOrientation.GetOpeningAngle(recoOrientation) > (M_PI * 0.5f) ? 0 : 1);
     }
-    catch (StatusCodeException &) { isOrientationCorrect = m_invalidInt; }
 
     trackTreeVars.m_recoEndpointX.push_back(recoEndpoint.GetX());
     trackTreeVars.m_recoEndpointY.push_back(recoEndpoint.GetY());
