@@ -658,6 +658,19 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     }
     LArCaloHitParameters parameters;
     pLArCaloHit->FillParameters(parameters);
+
+    // For merged worker instances, remap the hit's volume ids to match the merged LArTPC's renumbered readout volumes
+    if ((pPandora == m_pSlicingWorkerInstance) || (pPandora == m_pSliceNuWorkerInstance) || (pPandora == m_pSliceCRWorkerInstance))
+    {
+        const auto offsetIter(m_daughterVolumeIdOffsetMap.find(pLArCaloHit->GetLArTPCVolumeId()));
+
+        if (m_daughterVolumeIdOffsetMap.end() == offsetIter)
+            return STATUS_CODE_FAILURE;
+
+        parameters.m_larTPCVolumeId = 0;
+        parameters.m_daughterVolumeId = offsetIter->second + pLArCaloHit->GetDaughterVolumeId();
+    }
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
     if (m_passMCParticlesToWorkerInstances)
@@ -940,6 +953,7 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(
     larTPCParameters.m_wireAngleW = larTPC.GetWireAngleW();
     larTPCParameters.m_sigmaUVW = larTPC.GetSigmaUVW();
     larTPCParameters.m_isDriftInPositiveX = larTPC.IsDriftInPositiveX();
+    this->AppendReadoutVolumeParameters(larTPC, 0, larTPCParameters.m_readoutVolumeParametersVector);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
 
     const float tpcMinX(larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX()), tpcMaxX(larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX());
@@ -1036,6 +1050,19 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(
     larTPCParameters.m_wireAngleW = pFirstLArTPC->GetWireAngleW();
     larTPCParameters.m_sigmaUVW = pFirstLArTPC->GetSigmaUVW();
     larTPCParameters.m_isDriftInPositiveX = pFirstLArTPC->IsDriftInPositiveX();
+
+    // Merge in readout volumes from every child TPC, keeping ids unique, and record the offset used for each original LArTPC so hits copied
+    // into this worker can be remapped consistently in Copy()
+    unsigned int idOffset(0);
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pLArTPC(mapEntry.second);
+        // ATTN: This gets rebuilt on each call at startup (slicing), but it's always consistent, so it's fine to do this.
+        m_daughterVolumeIdOffsetMap[pLArTPC->GetLArTPCVolumeId()] = idOffset;
+        this->AppendReadoutVolumeParameters(*pLArTPC, idOffset, larTPCParameters.m_readoutVolumeParametersVector);
+        idOffset += pLArTPC->GetReadoutVolumes().size();
+    }
+
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
 
     // The Gaps
@@ -1058,6 +1085,37 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(
     // Configuration
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(*pPandora, settingsFile));
     return pPandora;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MasterAlgorithm::AppendReadoutVolumeParameters(const LArTPC &larTPC, const unsigned int idOffset,
+    object_creation::LArReadoutVolumeParametersVector &readoutVolumeParametersVector) const
+{
+    for (const auto &[_, readoutVolume] : larTPC.GetReadoutVolumes())
+    {
+        object_creation::LArReadoutVolumeParameters readoutVolumeParams;
+        readoutVolumeParams.m_id = idOffset + readoutVolume.GetId();
+        readoutVolumeParams.m_center = readoutVolume.GetCenter();
+        readoutVolumeParams.m_size = readoutVolume.GetSize();
+
+        for (const LArReadoutUnit &readoutUnit : readoutVolume.GetReadoutUnits())
+        {
+            object_creation::LArReadoutUnitParameters unitParams;
+            unitParams.m_id = readoutUnit.GetId();
+            unitParams.m_view = readoutUnit.GetView();
+
+            for (const LArReadoutChannel &channel : readoutUnit.GetReadoutChannels())
+            {
+                object_creation::LArReadoutChannelParameters channelParams;
+                channelParams.m_id = channel.GetId();
+                channelParams.m_channelIntervalArray = channel.GetChannelIntervals();
+                unitParams.m_channelParametersVector.push_back(channelParams);
+            }
+            readoutVolumeParams.m_readoutUnitParametersVector.push_back(unitParams);
+        }
+        readoutVolumeParametersVector.push_back(readoutVolumeParams);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

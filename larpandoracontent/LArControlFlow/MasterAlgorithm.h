@@ -286,6 +286,17 @@ protected:
         const std::string &settingsFile, const std::string &name) const;
 
     /**
+     *  @brief  Append the readout volume parameters from a given LArTPC into a readout volume parameters vector, offsetting each readout volume's
+     *          id to maintain uniqueness when merging multiple LArTPCs into one worker instance
+     *
+     *  @param  larTPC the source LArTPC
+     *  @param  idOffset the offset to apply to each readout volume's id
+     *  @param  readoutVolumeParametersVector the vector to append to
+     */
+    void AppendReadoutVolumeParameters(const pandora::LArTPC &larTPC, const unsigned int idOffset,
+        object_creation::LArReadoutVolumeParametersVector &readoutVolumeParametersVector) const;
+
+    /**
      *  @brief  Register custom content, such as algorithms or algorithm tools, with a specified pandora instance
      *
      *  @param  pPandora the address of the pandora instance
@@ -325,6 +336,7 @@ protected:
     const pandora::Pandora *m_pSlicingWorkerInstance; ///< The slicing worker instance
     const pandora::Pandora *m_pSliceNuWorkerInstance; ///< The per-slice neutrino reconstruction worker instance
     const pandora::Pandora *m_pSliceCRWorkerInstance; ///< The per-slice cosmic-ray reconstruction worker instance
+    mutable std::map<unsigned int, unsigned int> m_daughterVolumeIdOffsetMap; ///< Maps original LArTPC volume id -> id offset for merged instances
 
     bool m_fullWidthCRWorkerWireGaps;        ///< Whether wire-type line gaps in cosmic-ray worker instances should cover all drift time
     bool m_passMCParticlesToWorkerInstances; ///< Whether to pass mc particle details (and links to calo hits) to worker instances
