@@ -24,8 +24,10 @@ namespace lar_content
 class LArCaloHitParameters : public object_creation::CaloHit::Parameters
 {
 public:
-    pandora::InputUInt m_larTPCVolumeId;    ///< The lar tpc volume id
-    pandora::InputUInt m_daughterVolumeId;  ///< The daughter volume id
+    pandora::InputUInt m_larTPCVolumeId;   ///< The lar tpc volume id
+    pandora::InputUInt m_daughterVolumeId; ///< The daughter volume id
+    pandora::InputUInt m_channelId;        ///< The channel (wire) id
+
     pandora::FloatVector m_hitScores;       ///< Hit scores
     pandora::StringVector m_hitScoreLabels; ///< Labels for the hit scores
 };
@@ -58,6 +60,13 @@ public:
      *  @return the daughter volume id
      */
     unsigned int GetDaughterVolumeId() const;
+
+    /**
+     *  @brief  Get the channel (wire) id
+     *
+     *  @return the channel id
+     */
+    unsigned int GetChannelId() const;
 
     /**
      *  @brief  Fill the parameters associated with this calo hit
@@ -111,6 +120,7 @@ public:
 private:
     unsigned int m_larTPCVolumeId;          ///< The lar tpc volume id
     unsigned int m_daughterVolumeId;        ///< The daughter volume id
+    unsigned int m_channelId;               ///< The channel (wire) id
     pandora::FloatVector m_hitScores;       ///< Hit scores
     pandora::StringVector m_hitScoreLabels; ///< Labels for the hit scores
     pandora::InputFloat m_pTrack;           ///< The probability that the hit is track-like
@@ -164,6 +174,7 @@ inline LArCaloHit::LArCaloHit(const LArCaloHitParameters &parameters) :
     object_creation::CaloHit::Object(parameters),
     m_larTPCVolumeId(parameters.m_larTPCVolumeId.Get()),
     m_daughterVolumeId(parameters.m_daughterVolumeId.IsInitialized() ? parameters.m_daughterVolumeId.Get() : 0),
+    m_channelId(parameters.m_channelId.IsInitialized() ? parameters.m_channelId.Get() : 0),
     m_hitScores(parameters.m_hitScores),
     m_hitScoreLabels(parameters.m_hitScoreLabels)
 {
@@ -185,7 +196,14 @@ inline unsigned int LArCaloHit::GetDaughterVolumeId() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::FloatVector  &LArCaloHit::GetHitScores() const
+inline unsigned int LArCaloHit::GetChannelId() const
+{
+    return m_channelId;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::FloatVector &LArCaloHit::GetHitScores() const
 {
     return m_hitScores;
 }
@@ -224,6 +242,7 @@ inline void LArCaloHit::FillParameters(LArCaloHitParameters &parameters) const
     parameters.m_pParentAddress = static_cast<const void *>(this);
     parameters.m_larTPCVolumeId = this->GetLArTPCVolumeId();
     parameters.m_daughterVolumeId = this->GetDaughterVolumeId();
+    parameters.m_channelId = this->GetChannelId();
     parameters.m_hitScores = this->GetHitScores();
     parameters.m_hitScoreLabels = this->GetHitScoreLabels();
 }

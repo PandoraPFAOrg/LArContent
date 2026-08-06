@@ -8,6 +8,12 @@
 #ifndef LAR_GEOMETRY_HELPER_H
 #define LAR_GEOMETRY_HELPER_H 1
 
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
+
+#include "Geometry/LArReadoutChannel.h"
+#include "Geometry/LArReadoutUnit.h"
+#include "Geometry/LArReadoutVolume.h"
+#include "Geometry/LArTPC.h"
 #include "Objects/Cluster.h"
 #include "Pandora/PandoraEnumeratedTypes.h"
 #include "Pandora/StatusCodes.h"
@@ -315,6 +321,38 @@ public:
      */
     static float CalculateChiSquared(const pandora::Pandora &pandora, const pandora::CaloHit *const pCaloHitU,
         const pandora::CaloHit *const pCaloHitV, const pandora::CaloHit *const pCaloHitW);
+
+    /**
+     *  @brief  Get the LArTPC associated with a given calo hit
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  caloHit the calo hit
+     */
+    static const pandora::LArTPC &GetLArTPC(const pandora::Pandora &pandora, const LArCaloHit &caloHit);
+
+    /**
+     *  @brief  Get the readout volume associated with a given calo hit
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  caloHit the calo hit
+     */
+    static const pandora::LArReadoutVolume &GetReadoutVolume(const pandora::Pandora &pandora, const LArCaloHit &caloHit);
+
+    /**
+     *  @brief  Get the readout unit associated with a given calo hit
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  caloHit the calo hit
+     */
+    static const pandora::LArReadoutUnit &GetReadoutUnit(const pandora::Pandora &pandora, const LArCaloHit &caloHit);
+
+    /**
+     *  @brief  Get the readout channel associated with a given calo hit
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  caloHit the calo hit
+     */
+    static const pandora::LArReadoutChannel &GetReadoutChannel(const pandora::Pandora &pandora, const LArCaloHit &caloHit);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

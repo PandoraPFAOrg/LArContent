@@ -676,4 +676,48 @@ float LArGeometryHelper::CalculateChiSquared(
     return chiSquared;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const LArTPC &LArGeometryHelper::GetLArTPC(const Pandora &pandora, const LArCaloHit &caloHit)
+{
+    const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
+    LArTPCMap::const_iterator iter(larTPCMap.find(caloHit.GetLArTPCVolumeId()));
+
+    if (larTPCMap.end() == iter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return *(iter->second);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const LArReadoutVolume &LArGeometryHelper::GetReadoutVolume(const Pandora &pandora, const LArCaloHit &caloHit)
+{
+    const LArTPC &larTPC(LArGeometryHelper::GetLArTPC(pandora, caloHit));
+    return larTPC.GetReadoutVolume(caloHit.GetDaughterVolumeId());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const LArReadoutUnit &LArGeometryHelper::GetReadoutUnit(const Pandora &pandora, const LArCaloHit &caloHit)
+{
+    const LArReadoutVolume &readoutVolume(LArGeometryHelper::GetReadoutVolume(pandora, caloHit));
+
+    for (const LArReadoutUnit &readoutUnit : readoutVolume.GetReadoutUnits())
+    {
+        if (readoutUnit.GetView() == caloHit.GetHitType())
+            return readoutUnit;
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const LArReadoutChannel &LArGeometryHelper::GetReadoutChannel(const Pandora &pandora, const LArCaloHit &caloHit)
+{
+    const LArReadoutUnit &readoutUnit(LArGeometryHelper::GetReadoutUnit(pandora, caloHit));
+    return readoutUnit.GetReadoutChannel(caloHit.GetChannelId());
+}
+
 } // namespace lar_content
