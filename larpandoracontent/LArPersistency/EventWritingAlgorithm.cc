@@ -18,6 +18,7 @@
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
 #include "larpandoracontent/LArPersistency/EventWritingAlgorithm.h"
+#include "larpandoracontent/LArPersistency/LArTPCFactory.h"
 
 using namespace pandora;
 
@@ -85,6 +86,8 @@ StatusCode EventWritingAlgorithm::Initialize()
             m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode);
         else
             return STATUS_CODE_FAILURE;
+
+        m_pGeometryFileWriter->SetFactory(new LArTPCFactory());
     }
 
     if (m_shouldWriteEvents)

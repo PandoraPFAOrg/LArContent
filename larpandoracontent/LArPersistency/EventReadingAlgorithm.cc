@@ -15,6 +15,7 @@
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
+#include "larpandoracontent/LArPersistency/LArTPCFactory.h"
 
 #include <algorithm>
 
@@ -51,6 +52,7 @@ StatusCode EventReadingAlgorithm::Initialize()
         {
             BinaryFileReader fileReader(this->GetPandora(), m_geometryFileName);
             this->ConfigureReader(fileReader);
+            fileReader.SetFactory(new LArTPCFactory());
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGlobalHeader());
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGeometry());
         }
@@ -58,6 +60,7 @@ StatusCode EventReadingAlgorithm::Initialize()
         {
             XmlFileReader fileReader(this->GetPandora(), m_geometryFileName);
             this->ConfigureReader(fileReader);
+            fileReader.SetFactory(new LArTPCFactory());
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGlobalHeader());
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGeometry());
         }

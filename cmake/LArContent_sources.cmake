@@ -102,6 +102,7 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.cc
     larpandoracontent/LArPersistency/EventReadingAlgorithm.cc
     larpandoracontent/LArPersistency/EventWritingAlgorithm.cc
+    larpandoracontent/LArPersistency/LArTPCFactory.cc
     larpandoracontent/LArPlugins/LArParticleIdPlugins.cc
     larpandoracontent/LArPlugins/LArPseudoLayerPlugin.cc
     larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.cc

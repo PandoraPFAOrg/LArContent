@@ -1104,6 +1104,8 @@ void MasterAlgorithm::AppendReadoutVolumeParameters(const LArTPC &larTPC, const 
             object_creation::LArReadoutUnitParameters unitParams;
             unitParams.m_id = readoutUnit.GetId();
             unitParams.m_view = readoutUnit.GetView();
+            unitParams.m_referenceCoordinate = readoutUnit.GetReferenceCoordinate();
+            unitParams.m_pitch = readoutUnit.GetPitch();
 
             for (const LArReadoutChannel &channel : readoutUnit.GetReadoutChannels())
             {
