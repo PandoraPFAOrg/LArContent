@@ -47,6 +47,26 @@ public:
      */
     pandora::StatusCode Write(const Object *const pObject, pandora::FieldMap &fields) const;
 
+    /**
+     *  @brief  Compute the cross-view channel interval for a single channel against a single other view, from the generative
+     *          parameters of both readout units. Used both when regenerating persisted intervals on read, and by LArPandora when
+     *          computing intervals live, so both paths agree exactly.
+     *
+     *  @param  selfCoordinate the wire coordinate of the channel under consideration
+     *  @param  thetaSelf the wire angle of the channel's own view
+     *  @param  selfUnitCenter the centre of the channel's own readout unit active-area box (X unused)
+     *  @param  selfUnitSize the extent of the channel's own readout unit active-area box (X unused)
+     *  @param  thetaOther the wire angle (to the vertical) of the other view
+     *  @param  otherReferenceCoordinate the reference coordinate of the other readout unit
+     *  @param  otherPitch the signed pitch of the other readout unit
+     *  @param  otherNChannels the number of channels in the other readout unit
+     *
+     *  @return the channel interval in the other view
+     */
+    static pandora::LArReadoutChannel::ChannelInterval ComputeChannelInterval(const float selfCoordinate, const float thetaSelf,
+        const pandora::CartesianVector &selfUnitCenter, const pandora::CartesianVector &selfUnitSize, const float thetaOther,
+        const float otherReferenceCoordinate, const float otherPitch, const unsigned int otherNChannels);
+
 private:
     /**
      *  @brief  Collection of per-readout-unit information required while regenerating channel intervals.

@@ -107,10 +107,6 @@ StatusCode LArTPCFactory::Read(Parameters &parameters, const FieldMap &fields) c
             for (unsigned int c = 0; c < unitInfo.m_nChannels; ++c)
             {
                 const float selfCoordinate(unitInfo.m_referenceCoordinate + static_cast<float>(c) * unitInfo.m_pitch);
-
-                CartesianVector point1(0.f, 0.f, 0.f), point2(0.f, 0.f, 0.f);
-                LArTPCFactory::ClipLineAgainstBox(selfCoordinate, theta, unitInfo.m_unitCenter, unitInfo.m_unitSize, point1, point2);
-
                 object_creation::LArReadoutChannelParameters channelParams;
                 channelParams.m_id = c;
                 std::size_t slot(0);
@@ -123,20 +119,9 @@ StatusCode LArTPCFactory::Read(Parameters &parameters, const FieldMap &fields) c
                     const UnitInfo &otherInfo(unitInfoVector.at(other));
                     const float otherTheta(LArTPCFactory::GetWireAngle(otherInfo.m_view, thetaU, thetaV, thetaW));
 
-                    const float coordinate1(LArTPCFactory::ProjectCoordinate(point1.GetY(), point1.GetZ(), otherTheta));
-                    const float coordinate2(LArTPCFactory::ProjectCoordinate(point2.GetY(), point2.GetZ(), otherTheta));
-
-                    const auto toIndex = [&](const float coordinate) -> unsigned int
-                    {
-                        const int rawIndex(static_cast<int>(std::round((coordinate - otherInfo.m_referenceCoordinate) / otherInfo.m_pitch)));
-                        const int clampedIndex(std::max(0, std::min(rawIndex, static_cast<int>(otherInfo.m_nChannels) - 1)));
-                        return static_cast<unsigned int>(clampedIndex);
-                    };
-
-                    const unsigned int index1(toIndex(coordinate1)), index2(toIndex(coordinate2));
-
                     channelParams.m_channelIntervalArray[slot++] = {otherInfo.m_view,
-                        LArReadoutChannel::ChannelInterval{std::min(index1, index2), std::max(index1, index2)}};
+                        LArTPCFactory::ComputeChannelInterval(selfCoordinate, theta, unitInfo.m_unitCenter, unitInfo.m_unitSize,
+                            otherTheta, otherInfo.m_referenceCoordinate, otherInfo.m_pitch, otherInfo.m_nChannels)};
                 }
 
                 unitParams.m_channelParametersVector.push_back(channelParams);
@@ -189,6 +174,29 @@ void LArTPCFactory::ClipLineAgainstBox(const float coordinate, const float theta
 
     point1 = CartesianVector(0.f, y0 + tMin * dirY, z0 + tMin * dirZ);
     point2 = CartesianVector(0.f, y0 + tMax * dirY, z0 + tMax * dirZ);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArReadoutChannel::ChannelInterval LArTPCFactory::ComputeChannelInterval(const float selfCoordinate, const float thetaSelf,
+    const CartesianVector &selfUnitCenter, const CartesianVector &selfUnitSize, const float thetaOther,
+    const float otherReferenceCoordinate, const float otherPitch, const unsigned int otherNChannels)
+{
+    CartesianVector point1(0.f, 0.f, 0.f), point2(0.f, 0.f, 0.f);
+    LArTPCFactory::ClipLineAgainstBox(selfCoordinate, thetaSelf, selfUnitCenter, selfUnitSize, point1, point2);
+
+    const float coordinate1(LArTPCFactory::ProjectCoordinate(point1.GetY(), point1.GetZ(), thetaOther));
+    const float coordinate2(LArTPCFactory::ProjectCoordinate(point2.GetY(), point2.GetZ(), thetaOther));
+
+    const auto toIndex = [&](const float coordinate) -> unsigned int
+    {
+        const int rawIndex(static_cast<int>(std::round((coordinate - otherReferenceCoordinate) / otherPitch)));
+        const int clampedIndex(std::max(0, std::min(rawIndex, static_cast<int>(otherNChannels) - 1)));
+        return static_cast<unsigned int>(clampedIndex);
+    };
+
+    const unsigned int index1(toIndex(coordinate1)), index2(toIndex(coordinate2));
+    return LArReadoutChannel::ChannelInterval{std::min(index1, index2), std::max(index1, index2)};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
