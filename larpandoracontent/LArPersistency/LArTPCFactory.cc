@@ -44,6 +44,8 @@ StatusCode LArTPCFactory::Write(const Object *const pObject, FieldMap &fields) c
             fields.Set(uPrefix + "nChannels", static_cast<unsigned int>(unit.GetReadoutChannels().size()));
             fields.Set(uPrefix + "referenceCoordinate", unit.GetReferenceCoordinate());
             fields.Set(uPrefix + "pitch", unit.GetPitch());
+            fields.Set(uPrefix + "unitCenter", unit.GetUnitCenter());
+            fields.Set(uPrefix + "unitSize", unit.GetUnitSize());
         }
     }
 
@@ -83,6 +85,8 @@ StatusCode LArTPCFactory::Read(Parameters &parameters, const FieldMap &fields) c
             unitInfo.m_nChannels = fields.GetOrDefault<unsigned int>(uPrefix + "nChannels", 0u);
             unitInfo.m_referenceCoordinate = fields.GetOrDefault<float>(uPrefix + "referenceCoordinate", 0.f);
             unitInfo.m_pitch = fields.GetOrDefault<float>(uPrefix + "pitch", 1.f);
+            unitInfo.m_unitCenter = fields.GetOrDefault<CartesianVector>(uPrefix + "unitCenter", CartesianVector(0.f, 0.f, 0.f));
+            unitInfo.m_unitSize = fields.GetOrDefault<CartesianVector>(uPrefix + "unitSize", CartesianVector(0.f, 0.f, 0.f));
             unitInfoVector.push_back(unitInfo);
         }
 
@@ -96,6 +100,8 @@ StatusCode LArTPCFactory::Read(Parameters &parameters, const FieldMap &fields) c
             unitParams.m_view = unitInfo.m_view;
             unitParams.m_referenceCoordinate = unitInfo.m_referenceCoordinate;
             unitParams.m_pitch = unitInfo.m_pitch;
+            unitParams.m_unitCenter = unitInfo.m_unitCenter;
+            unitParams.m_unitSize = unitInfo.m_unitSize;
 
             // Regenerate the per-channel cross-view intervals for this readout unit
             for (unsigned int c = 0; c < unitInfo.m_nChannels; ++c)
@@ -103,7 +109,7 @@ StatusCode LArTPCFactory::Read(Parameters &parameters, const FieldMap &fields) c
                 const float selfCoordinate(unitInfo.m_referenceCoordinate + static_cast<float>(c) * unitInfo.m_pitch);
 
                 CartesianVector point1(0.f, 0.f, 0.f), point2(0.f, 0.f, 0.f);
-                LArTPCFactory::ClipLineAgainstBox(selfCoordinate, theta, volumeParams.m_center, volumeParams.m_size, point1, point2);
+                LArTPCFactory::ClipLineAgainstBox(selfCoordinate, theta, unitInfo.m_unitCenter, unitInfo.m_unitSize, point1, point2);
 
                 object_creation::LArReadoutChannelParameters channelParams;
                 channelParams.m_id = c;
