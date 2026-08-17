@@ -27,7 +27,6 @@ public:
     pandora::InputUInt m_larTPCVolumeId;    ///< The lar tpc volume id
     pandora::InputUInt m_daughterVolumeId;  ///< The daughter volume id
     pandora::InputUInt m_channelId;         ///< The channel of the hit
-    pandora::InputFloat m_timeSigma;        ///< The uncertainty for the signal peak
     pandora::InputFloat m_width;            ///< The width of the optical hit
     pandora::FloatVector m_hitScores;       ///< Hit scores
     pandora::StringVector m_hitScoreLabels; ///< Labels for the hit scores
@@ -68,13 +67,6 @@ public:
      *  @return the channel id
      */
     unsigned int GetChannelId() const;
-
-    /**
-     *  @brief  Get the uncertainty for the signal peak
-     *
-     *  @return the uncertainty for the signal peak
-     */
-    float GetTimeSigma() const;
 
     /**
      *  @brief  Fill the parameters associated with this calo hit
@@ -128,8 +120,7 @@ public:
 private:
     unsigned int m_larTPCVolumeId;          ///< The lar tpc volume id
     unsigned int m_daughterVolumeId;        ///< The daughter volume id
-    unsigned int m_channelId;               ///< The channel (wire) id
-    float m_timeSigma;                      ///< The uncertainty for the signal peak
+    unsigned int m_channelId;               ///< The channel id
     pandora::FloatVector m_hitScores;       ///< Hit scores
     pandora::StringVector m_hitScoreLabels; ///< Labels for the hit scores
     pandora::InputFloat m_pTrack;           ///< The probability that the hit is track-like
@@ -177,6 +168,7 @@ private:
     float m_width; ///< The width of the optical hit
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  LArCaloHitFactory responsible for object creation
@@ -402,22 +394,20 @@ inline LArHitFactory::Parameters *LArHitFactory::NewParameters() const
 
 inline pandora::StatusCode LArHitFactory::Create(const Parameters &parameters, const Object *&pObject) const
 {
+    const LArHitParameters &larHitParameters(dynamic_cast<const LArHitParameters &>(parameters));
+
     switch (parameters.m_hitType.Get())
     {
         case pandora::OPTICAL_SIPM:
         case pandora::OPTICAL_TRAP:
         case pandora::OPTICAL_TPC:
         {
-            const LArHitParameters &larHitParameters(dynamic_cast<const LArHitParameters &>(parameters));
             pObject = new LArOpHit(larHitParameters);
-
             return pandora::STATUS_CODE_SUCCESS;
         }
         default:
         {
-            const LArHitParameters &larHitParameters(dynamic_cast<const LArHitParameters &>(parameters));
             pObject = new LArCaloHit(larHitParameters);
-
             return pandora::STATUS_CODE_SUCCESS;
         }
     }

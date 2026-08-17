@@ -276,6 +276,10 @@ StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volume
 
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
+        const HitType hitType(pCaloHit->GetHitType());
+        if ((OPTICAL_SIPM == hitType) || (OPTICAL_TRAP == hitType) || (OPTICAL_TPC == hitType))
+            continue;
+
         const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
 
         if (!pLArCaloHit && (1 != nLArTPCs))
