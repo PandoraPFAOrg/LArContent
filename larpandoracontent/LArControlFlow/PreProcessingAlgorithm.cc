@@ -205,6 +205,9 @@ void PreProcessingAlgorithm::PopulateVoidCaloHitLists() noexcept
 
         if (!m_outputCaloHitListNameW.empty())
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, emptyList, m_outputCaloHitListNameW));
+
+        if (!m_outputCaloHitListNameOp.empty())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, emptyList, m_outputCaloHitListNameOp));
     }
     catch (...)
     {
