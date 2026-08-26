@@ -157,6 +157,7 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/PlaneSolverAlgorithm.cc
+    larpandoracontent/LArThreeDReco/LArHitCreation/PlaneSolverHitsTool.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.cc
     larpandoracontent/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.cc
