@@ -29,7 +29,7 @@ void PlaneSolverHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, cons
 {
 
     const LArPlaneContextObject *pPlaneContextObject{
-        dynamic_cast<const LArPlaneContextObject *>(PandoraContentApi::GetEventContextObject(*pAlgorithm, "PlaneContext"))};
+        dynamic_cast<const LArPlaneContextObject *>(PandoraContentApi::GetEventContextObject(*pAlgorithm, m_planeSolverContextName))};
 
     if (!pPlaneContextObject)
         return;
