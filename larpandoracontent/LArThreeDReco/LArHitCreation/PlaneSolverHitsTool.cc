@@ -12,6 +12,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/PlaneSolverHitsTool.h"
 
+#include <unordered_map>
+
 using namespace pandora;
 
 namespace lar_content
@@ -67,11 +69,16 @@ void PlaneSolverHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, cons
         if (canUseHit2)
             fitPositions2.emplace_back(hitTypeToCaloHitMap[hitType2]->GetPositionVector());
 
-        ProtoHit protoHit(pCaloHit2D);
-        this->GetBestPosition3D(hitType1, hitType2, fitPositions1, fitPositions2, protoHit);
-
-        if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
-            protoHitVector.emplace_back(protoHit);
+        try
+        {
+            ProtoHit protoHit(pCaloHit2D);
+            this->GetBestPosition3D(hitType1, hitType2, fitPositions1, fitPositions2, protoHit);
+            if (protoHit.IsPositionSet() && (protoHit.GetChi2() < m_chiSquaredCut))
+                protoHitVector.emplace_back(protoHit);
+        }
+        catch (StatusCodeException &)
+        {
+        }
     }
 }
 
