@@ -32,9 +32,10 @@ CrossGapsAssociationAlgorithm::CrossGapsAssociationAlgorithm() :
     m_maxOnClusterDistance(1.5f),
     m_minMatchedSamplingPoints(10),
     m_minMatchedSamplingFraction(0.5f),
-    m_crossAPAStepModifier(6.5f),
-    m_crossAPANearClusterModifier(1.0f),
-    m_boost_start_step(12.0f),
+    m_crossTPCStepModifier(0.0f),
+    m_crossTPCOnClusterDistanceModifier(0.0f),
+    m_boostStartStep(0.0f),
+    m_crossTPCMaxAdditionalSteps(1000.0f),
     m_gapTolerance(0.f),
     m_visualize(false)
 {
@@ -51,11 +52,9 @@ void CrossGapsAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *co
     for (const Cluster *const pCluster : *pClusterList)
     {
         if (pCluster->GetNCaloHits() < m_minClusterHits)
-            
             continue;
 
-        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < m_minClusterLayers)
-            
+        if (1 + pCluster->GetOuterPseudoLayer() - pCluster->GetInnerPseudoLayer() < m_minClusterLayers)   
             continue;
 
         clusterVector.push_back(pCluster);
@@ -138,72 +137,41 @@ bool CrossGapsAssociationAlgorithm::AreClustersAssociated(const TwoDSlidingFitRe
 
     if (outerFitResult.GetCluster()->GetInnerPseudoLayer() < innerFitResult.GetCluster()->GetOuterPseudoLayer())
         return false;
-    
-    
-    const Cluster *const pCluster{innerFitResult.GetCluster()};
-    CaloHitList caloHits;
-    LArClusterHelper::GetAllHits(pCluster, caloHits);
-    unsigned int innervolID = 2;
-    std::set<int> innervolIDs;
-    for (const CaloHit *const pCaloHit : caloHits)
-    {
-        const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
         
-        innervolID = pLArCaloHit->GetLArTPCVolumeId();
-        innervolIDs.insert(innervolID);
-    }
-    caloHits.clear();
-    
-    const Cluster *const pCluster2{outerFitResult.GetCluster()};
-    CaloHitList caloHits2;
-    LArClusterHelper::GetAllHits(pCluster2, caloHits2);
-    unsigned int outervolID = 2;
-    std::set<int> outervolIDs;
-    for (const CaloHit *const pCaloHit2 : caloHits2)
-    {
-        const LArCaloHit *const pLArCaloHit2{dynamic_cast<const LArCaloHit *>(pCaloHit2)};
+    bool isCrossingTPCCandidate = false;
+    if (m_crossTPCStepModifier != 0.0) {
         
-        outervolID = pLArCaloHit2->GetLArTPCVolumeId();
-        outervolIDs.insert(outervolID);
-    }
-    caloHits2.clear();
+        std::set<unsigned int> innerVolIDs;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindLArTPCVolumeIds(innerFitResult, innerVolIDs));
+        std::set<unsigned int> outerVolIDs;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindLArTPCVolumeIds(outerFitResult, outerVolIDs));
+
+        std::vector<int> sharedClusterVolIDs;
     
-    bool isCrossingAPA = false;
-    
-    
-    std::cout << "InnervolID = " << innervolID << " / OutervolID = " << outervolID << std::endl;
-    
-    std::vector<int> sharedClusterVolIDs;
-    
-    std::set_intersection(innervolIDs.begin(), innervolIDs.end(),
-                          outervolIDs.begin(), outervolIDs.end(),
+        std::set_intersection(innerVolIDs.begin(), innerVolIDs.end(),
+                          outerVolIDs.begin(), outerVolIDs.end(),
                           std::back_inserter(sharedClusterVolIDs));
     
-    if (sharedClusterVolIDs.empty()) {
-    
-        isCrossingAPA = true; //set this to false to turn off the corrections for crossing the apa gap
+        if (sharedClusterVolIDs.empty()) 
+            isCrossingTPCCandidate = true; //set this to false to turn off the corrections for crossing the gap     
         
     }
-    
-    
-    innervolIDs.clear();
-    outervolIDs.clear();
 
-    return (this->IsAssociated(innerFitResult.GetGlobalMaxLayerPosition(), innerFitResult.GetGlobalMaxLayerDirection(), outerFitResult, isCrossingAPA) &&
-        this->IsAssociated(outerFitResult.GetGlobalMinLayerPosition(), outerFitResult.GetGlobalMinLayerDirection() * -1.f, innerFitResult, isCrossingAPA));
+    return (this->IsAssociated(innerFitResult.GetGlobalMaxLayerPosition(), innerFitResult.GetGlobalMaxLayerDirection(), outerFitResult, isCrossingTPCCandidate) &&
+        this->IsAssociated(outerFitResult.GetGlobalMinLayerPosition(), outerFitResult.GetGlobalMinLayerDirection() * -1.f, innerFitResult, isCrossingTPCCandidate));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool CrossGapsAssociationAlgorithm::IsAssociated(
-    const CartesianVector &startPosition, const CartesianVector &startDirection, const TwoDSlidingFitResult &targetFitResult, bool &isCrossingAPA) const
+    const CartesianVector &startPosition, const CartesianVector &startDirection, const TwoDSlidingFitResult &targetFitResult, const bool isCrossingTPCCandidate) const
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(targetFitResult.GetCluster()));
     const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), hitType)};
     const float sampleStepSizeAdjusted{ratio * m_sampleStepSize};
     unsigned int nMatchedSamplingPoints(0), nUnmatchedSampleRun(0);
 
-    bool shouldVisualise{false};
+    bool shouldVisualize{false};
     if (m_visualize)
     {
         for (unsigned int iSample = 0; iSample < m_maxSamplingPoints; ++iSample)
@@ -212,25 +180,26 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
 
             if (LArGeometryHelper::IsInGap(this->GetPandora(), samplingPoint, hitType, m_gapTolerance))
             {
-                shouldVisualise = true;
+                shouldVisualize = true;
                 break;
             }
         }
     }
     
-    unsigned int CrossAPAGapAdditionalSteps = 0;
-    
-    if ( startDirection.GetOpeningAngle(CartesianVector(1.0, 0.0, 0.0)) < startDirection.GetOpeningAngle(CartesianVector(-1.0, 0.0, 0.0)) ) {
-        CrossAPAGapAdditionalSteps = static_cast<int>(std::round( m_crossAPAStepModifier / startDirection.GetCosOpeningAngle(CartesianVector(1.0, 0.0, 0.0))))  * static_cast<int>(isCrossingAPA);
-    }
+    unsigned int crossTPCGapAdditionalSteps = 0;
+    if(isCrossingTPCCandidate) {
+        if ( startDirection.GetOpeningAngle(CartesianVector(1.0, 0.0, 0.0)) < startDirection.GetOpeningAngle(CartesianVector(-1.0, 0.0, 0.0)) ) {
+            crossTPCGapAdditionalSteps = static_cast<int>(std::round( m_crossTPCStepModifier / startDirection.GetCosOpeningAngle(CartesianVector(1.0, 0.0, 0.0))))  *      static_cast<int>(isCrossingTPCCandidate);
+        }
         
-    if ( startDirection.GetOpeningAngle(CartesianVector(-1.0, 0.0, 0.0)) < startDirection.GetOpeningAngle(CartesianVector(1.0, 0.0, 0.0)) ) {
-        CrossAPAGapAdditionalSteps = static_cast<int>(std::round( m_crossAPAStepModifier / startDirection.GetCosOpeningAngle(CartesianVector(-1.0, 0.0, 0.0))))  * static_cast<int>(isCrossingAPA);
+        else {
+            crossTPCGapAdditionalSteps = static_cast<int>(std::round( m_crossTPCStepModifier / startDirection.GetCosOpeningAngle(CartesianVector(-1.0, 0.0, 0.0))))  * static_cast<int>(isCrossingTPCCandidate);
+        }
+        if ( crossTPCGapAdditionalSteps > m_crossTPCMaxAdditionalSteps ) {
+            crossTPCGapAdditionalSteps = m_crossTPCMaxAdditionalSteps;
+        }
     }
-    std::cout << "CrossAPAGapAdditionalSteps = " << CrossAPAGapAdditionalSteps << std::endl;
-    std::cout << "Angle1 = " << startDirection.GetOpeningAngle(CartesianVector(1.0, 0.0, 0.0)) << std::endl;
-    std::cout << "Angle2 = " << startDirection.GetOpeningAngle(CartesianVector(-1.0, 0.0, 0.0)) << std::endl;
-    float num_apa_steps = 0.0;
+    float numGapSteps = 0.0;
     for (unsigned int iSample = 0; iSample < m_maxSamplingPoints; ++iSample)
     {
     
@@ -238,35 +207,35 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
 
         if (LArGeometryHelper::IsInGap(this->GetPandora(), samplingPoint, hitType, m_gapTolerance))
         {
-            if (shouldVisualise)
+            if (shouldVisualize)
             {
                 PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "", BLUE, 1));
             }
-            num_apa_steps = num_apa_steps + 1.0;
+            numGapSteps = numGapSteps + 1.0;
             nUnmatchedSampleRun = 0; // ATTN Choose to also reset run when entering gap region
             continue;
         }
 
-        if (this->IsNearCluster(samplingPoint, targetFitResult, num_apa_steps, isCrossingAPA))
+        if (this->IsNearCluster(samplingPoint, targetFitResult, numGapSteps, isCrossingTPCCandidate))
         {
             ++nMatchedSamplingPoints;
             nUnmatchedSampleRun = 0;
-            if (shouldVisualise)
+            if (shouldVisualize)
             {
                 PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "", GREEN, 1));
             }
         }
-        else if (++nUnmatchedSampleRun > m_maxUnmatchedSampleRun + CrossAPAGapAdditionalSteps)
+        else if (++nUnmatchedSampleRun > m_maxUnmatchedSampleRun + crossTPCGapAdditionalSteps)
         {
             break;
         }
-        else if (shouldVisualise)
+        else if (shouldVisualize)
         {
             PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &samplingPoint, "", RED, 1));
         }
     }
-    std::cout << "Number of steps in APA gap = " << num_apa_steps << std::endl;
-    if (shouldVisualise)
+    
+    if (shouldVisualize)
     {
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
@@ -283,7 +252,7 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CrossGapsAssociationAlgorithm::IsNearCluster(const CartesianVector &samplingPoint, const TwoDSlidingFitResult &targetFitResult, float &num_apa_steps, bool &isCrossingAPA) const
+bool CrossGapsAssociationAlgorithm::IsNearCluster(const CartesianVector &samplingPoint, const TwoDSlidingFitResult &targetFitResult, const float numGapSteps, const bool isCrossingTPCCandidate) const
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(targetFitResult.GetCluster()));
     const float ratio{LArGeometryHelper::GetWirePitchRatio(this->GetPandora(), hitType)};
@@ -294,12 +263,14 @@ bool CrossGapsAssociationAlgorithm::IsNearCluster(const CartesianVector &samplin
 
     CartesianVector fitPosition(0.f, 0.f, 0.f);
     
-    float crossingAPAcheck = static_cast<float>(isCrossingAPA);
-    
+    float additionalMaxOnClusterDistance = 0.0;
+    if (isCrossingTPCCandidate) {
+        additionalMaxOnClusterDistance = m_crossTPCOnClusterDistanceModifier * sqrt(std::max(numGapSteps - m_boostStartStep, 0.f));
+    }
 
     if (STATUS_CODE_SUCCESS == targetFitResult.GetGlobalFitPosition(rL, fitPosition))
     {
-        if ((fitPosition - samplingPoint).GetMagnitudeSquared() < (maxOnClusterDistanceAdjusted + m_crossAPANearClusterModifier * sqrt(std::max(num_apa_steps - m_boost_start_step, 0.f)) * crossingAPAcheck) * (maxOnClusterDistanceAdjusted + m_crossAPANearClusterModifier * sqrt(std::max(num_apa_steps - m_boost_start_step, 0.f)) * crossingAPAcheck))
+        if ((fitPosition - samplingPoint).GetMagnitudeSquared() < (maxOnClusterDistanceAdjusted + additionalMaxOnClusterDistance) * (maxOnClusterDistanceAdjusted + additionalMaxOnClusterDistance))
             return true;
     }
 
@@ -307,13 +278,32 @@ bool CrossGapsAssociationAlgorithm::IsNearCluster(const CartesianVector &samplin
 
     if (STATUS_CODE_SUCCESS == targetFitResult.GetGlobalFitPositionAtX(samplingPoint.GetX(), fitPositionAtX))
     {
-        if ((fitPositionAtX - samplingPoint).GetMagnitudeSquared() < (maxOnClusterDistanceAdjusted + m_crossAPANearClusterModifier * sqrt(std::max(num_apa_steps - m_boost_start_step, 0.f)) * crossingAPAcheck) * (maxOnClusterDistanceAdjusted + m_crossAPANearClusterModifier * sqrt(std::max(num_apa_steps - m_boost_start_step, 0.f)) * crossingAPAcheck))
+        if ((fitPositionAtX - samplingPoint).GetMagnitudeSquared() < (maxOnClusterDistanceAdjusted + additionalMaxOnClusterDistance) * (maxOnClusterDistanceAdjusted + additionalMaxOnClusterDistance))
             return true;
     }
 
     return false;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CrossGapsAssociationAlgorithm::FindLArTPCVolumeIds(const TwoDSlidingFitResult &fitResult, std::set<unsigned int> &volIds) const
+{
+    const Cluster *const pCluster{fitResult.GetCluster()};
+    CaloHitList caloHits;
+    LArClusterHelper::GetAllHits(pCluster, caloHits);
+    
+    for (const CaloHit *const pCaloHit : caloHits)
+    {
+        const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
+        if (pLArCaloHit == nullptr) {
+            return STATUS_CODE_NOT_INITIALIZED;
+        }
+        volIds.insert(pLArCaloHit->GetLArTPCVolumeId());
+    }
+    
+    return STATUS_CODE_SUCCESS;
+}
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode CrossGapsAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
@@ -350,13 +340,16 @@ StatusCode CrossGapsAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHand
         XmlHelper::ReadValue(xmlHandle, "MinMatchedSamplingFraction", m_minMatchedSamplingFraction));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CrossAPAStepModifier", m_crossAPAStepModifier));
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CrossTPCStepModifier", m_crossTPCStepModifier));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CrossAPANearClusterModifier", m_crossAPANearClusterModifier));
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CrossTPCOnClusterDistanceModifier", m_crossTPCOnClusterDistanceModifier));
         
     PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BoostStartStep", m_boost_start_step));
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BoostStartStep", m_boostStartStep));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CrossTPCMaxAdditionalSteps", m_crossTPCMaxAdditionalSteps));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GapTolerance", m_gapTolerance));
     
