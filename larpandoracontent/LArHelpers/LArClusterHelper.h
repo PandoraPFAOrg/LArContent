@@ -271,9 +271,10 @@ public:
      *  @param  pCluster address of the cluster
      *  @param  the minimum positions (x,y,z)
      *  @param  the maximum positions (x,y,z)
+     *  @param  useHitWidth whether to use the hit width in the calculation
      */
-    static void GetClusterBoundingBox(
-        const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, pandora::CartesianVector &maximumCoordinate);
+    static void GetClusterBoundingBox(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate,
+        pandora::CartesianVector &maximumCoordinate, bool useHitWidth = false);
 
     /**
      *  @brief  Get vector of hit coordinates from an input cluster

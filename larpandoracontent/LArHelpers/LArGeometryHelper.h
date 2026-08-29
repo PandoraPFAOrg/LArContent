@@ -296,6 +296,15 @@ public:
     static DetectorBoundaries GetDetectorBoundaries(const pandora::Pandora &pandora);
 
     /**
+     *  @brief  Obtain the list of 'line gap' boundaries in the detector,
+                'line gaps' are those that span the drift coordinate
+     *
+     *  @param  pandora the pandora instance
+     *  @param[out] detXGaps the set of x positions of the detector gaps
+     */    
+    static void GetDetectorXGaps(const pandora::Pandora &pandora, std::set<float> &detXGaps);
+
+    /**
      *  @brief  Return whether an input point is within the bounds of the detector
      *
      *  @param detectorBoundaries the detector boundaries
