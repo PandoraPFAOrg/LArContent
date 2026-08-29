@@ -52,6 +52,7 @@ protected:
     bool m_useICARUSCollectionPlane;      ///< Whether to change the view logic in order to match the ICARUS Collection plane
     bool m_persistFeatures;               ///< Whether to write the features to the properties map
     bool m_trainingSetMode;               ///< Whether to train
+    bool m_cheatingSetMode;               ///< Wheter to cheat the algoruthm, i.e. imposing the track score but still computing the features
     bool m_testBeamMode;                  ///< Whether the training set is from a test beam experiment
     bool m_enableProbability;             ///< Whether to use probabilities instead of binary classification
     bool m_useThreeDInformation;          ///< Whether to use 3D information
