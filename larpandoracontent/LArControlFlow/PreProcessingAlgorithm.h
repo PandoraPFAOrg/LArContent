@@ -41,9 +41,19 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief Build separate CaloHitLists for each view
+     *  @brief Build separate CaloHitLists for charge and light, separating charge hits by view
      */
     void ProcessCaloHits();
+
+    /**
+     *  @brief Build separate CaloHitLists for charge hits for each view
+     */
+    void ProcessChargeHit(const pandora::CaloHit *const pCaloHit, pandora::CaloHitList &hitList) const;
+
+    /**
+     *  @brief Build CaloHitList for optical hits
+     */
+    void ProcessOpticalHit(const pandora::CaloHit *const pCaloHit, pandora::CaloHitList &hitList) const;
 
     /**
      *  @brief Build empty calo hit lists
@@ -76,6 +86,7 @@ private:
     std::string m_outputCaloHitListNameU;        ///< The output calo hit list name for TPC_VIEW_U hits
     std::string m_outputCaloHitListNameV;        ///< The output calo hit list name for TPC_VIEW_V hits
     std::string m_outputCaloHitListNameW;        ///< The output calo hit list name for TPC_VIEW_W hits
+    std::string m_outputCaloHitListNameOp;       ///< The output calo hit list name for optical hits
     std::string m_filteredCaloHitListName;       ///< The output calo hit list name for all U, V and W hits
     std::string m_currentCaloHitListReplacement; ///< The name of the calo hit list to replace the current list (optional)
 };

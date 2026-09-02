@@ -147,7 +147,7 @@ StatusCode EventReadingAlgorithm::ReplaceEventFileReader(const std::string &file
     }
 
     if (m_useLArCaloHits)
-        m_pEventFileReader->SetFactory(new LArCaloHitFactory(m_larCaloHitVersion));
+        m_pEventFileReader->SetFactory(new LArHitFactory(m_larCaloHitVersion));
 
     if (m_useLArMCParticles)
         m_pEventFileReader->SetFactory(new LArMCParticleFactory(m_larMCParticleVersion));

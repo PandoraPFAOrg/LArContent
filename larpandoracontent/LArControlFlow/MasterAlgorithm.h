@@ -112,11 +112,20 @@ protected:
     pandora::StatusCode GetVolumeIdToHitListMap(VolumeIdToHitListMap &volumeIdToHitListMap) const;
 
     /**
+     *  @brief  Get the collection of optical hits.
+     *          ATTN: Currently, this is all optical hits. We should probably have a similar map to volumes for
+     *          confining light to relevant TPCs
+     *
+     *  @param  opticalHitList the output collection of optical hits
+     */
+    pandora::StatusCode GetOpticalHitList(pandora::CaloHitList &opticalHitList) const;
+
+    /**
      *  @brief  Run the cosmic-ray reconstruction worker instances
      *
      *  @param  volumeIdToHitListMap the volume id to hit list map
      */
-    pandora::StatusCode RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap) const;
+    pandora::StatusCode RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap, const pandora::CaloHitList &opticalHitList) const;
 
     /**
      *  @brief  Recreate cosmic-ray pfos (created by worker instances) in the master instance
@@ -152,14 +161,16 @@ protected:
 
     /**
      *  @brief  Run the event slicing procedures, dividing available hits up into distinct 3D regions
+     *          ATTN: Optical hits should probably adopt the same volume map as charge hits - we may even want them in that map
      *
      *  @param  volumeIdToHitListMap the volume id to hit list map
+     *  @param  opticalHitList the list of optical hits
      *  @param  sliceVector to receive the populated slice vector
      */
-    pandora::StatusCode RunSlicing(const VolumeIdToHitListMap &volumeIdToHitListMap, SliceVector &sliceVector) const;
+    pandora::StatusCode RunSlicing(const VolumeIdToHitListMap &volumeIdToHitListMap, const pandora::CaloHitList &opticalHitList, SliceVector &sliceVector) const;
 
     /**
-     *  @brief  Process each slice under different reconstruction hypotheses
+     *  @brief  Process each slice under different reconstruction hypotheses.
      *
      *  @param  sliceVector the slice vector
      *  @param  nuSliceHypotheses to receive the vector of slice neutrino hypotheses
@@ -346,12 +357,13 @@ protected:
 
     std::string m_inputMCParticleListName;  ///< The input mc particle list name
     std::string m_inputHitListName;         ///< The input hit list name
+    std::string m_inputOpHitListName;       ///< The input optical hit list name
     std::string m_recreatedPfoListName;     ///< The output recreated pfo list name
     std::string m_recreatedClusterListName; ///< The output recreated cluster list name
     std::string m_recreatedVertexListName;  ///< The output recreated vertex list name
 
     float m_inTimeMaxX0;                   ///< Cut on X0 to determine whether particle is clear cosmic ray
-    LArCaloHitFactory m_larCaloHitFactory; ///< Factory for creating LArCaloHits during hit copying
+    LArHitFactory m_larHitFactory; ///< Factory for creating LAr Hits during hit copying
 };
 
 } // namespace lar_content

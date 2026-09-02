@@ -114,7 +114,7 @@ StatusCode EventWritingAlgorithm::Initialize()
         }
 
         if (m_useLArCaloHits)
-            m_pEventFileWriter->SetFactory(new LArCaloHitFactory(m_larCaloHitVersion));
+            m_pEventFileWriter->SetFactory(new LArHitFactory(m_larCaloHitVersion));
 
         if (m_useLArMCParticles)
             m_pEventFileWriter->SetFactory(new LArMCParticleFactory);
