@@ -28,6 +28,7 @@ public:
     pandora::InputUInt m_daughterVolumeId;  ///< The daughter volume id
     pandora::InputUInt m_channelId;         ///< The channel of the hit
     pandora::InputFloat m_width;            ///< The width of the optical hit
+    pandora::InputFloat m_startTime;        ///< The start time of the optical hit
     pandora::FloatVector m_hitScores;       ///< Hit scores
     pandora::StringVector m_hitScoreLabels; ///< Labels for the hit scores
 };
@@ -150,9 +151,16 @@ public:
     unsigned int GetChannelId() const;
 
     /**
-     *  @brief  Get the lar tpc volume id
+     *  @brief  Get the start time of the optical hit
      *
-     *  @return the lar tpc volume id
+     *  @return the start time of the optical hit
+     */
+    float GetStartTime() const;
+
+    /**
+     *  @brief  Get the width of the optical hit
+     *
+     *  @return the width of the optical hit
      */
     float GetWidth() const;
 
@@ -165,7 +173,8 @@ public:
 
 private:
     unsigned int m_channelId; ///< The channel of the hit
-    float m_width; ///< The width of the optical hit
+    float m_width;            ///< The width of the optical hit
+    float m_startTime;        ///< The start time of the optical hit
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -327,9 +336,17 @@ inline void LArCaloHit::SetShowerProbability(const float probability)
 
 inline LArOpHit::LArOpHit(const LArHitParameters &parameters) :
     object_creation::CaloHit::Object(parameters),
+    m_startTime(parameters.m_startTime.Get()),
     m_width(parameters.m_width.Get()),
     m_channelId(parameters.m_channelId.Get())
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArOpHit::GetStartTime() const
+{
+    return m_startTime;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -372,6 +389,7 @@ inline void LArOpHit::FillParameters(LArHitParameters &parameters) const
     // ATTN Set the parent address to the original owner of the calo hit
     parameters.m_pParentAddress = static_cast<const void *>(this);
     parameters.m_channelId = this->GetChannelId();
+    parameters.m_startTime = this->GetStartTime();
     parameters.m_width = this->GetWidth();
 }
 
@@ -429,6 +447,7 @@ inline pandora::StatusCode LArHitFactory::Read(Parameters &parameters, const pan
             LArHitParameters &p(dynamic_cast<LArHitParameters &>(parameters));
             p.m_channelId = fields.GetOrDefault<unsigned int>("opticalChannelId", 0u);
             p.m_width = fields.GetOrDefault<float>("opticalWidth", 0.f);
+            p.m_startTime = fields.GetOrDefault<float>("opticalStartTime", 0.f);
 
             return pandora::STATUS_CODE_SUCCESS;
         }
@@ -479,6 +498,7 @@ inline pandora::StatusCode LArCaloHitFactory::Write(const Object *const pObject,
 
             fields.Set("opticalChannelId", pLArOpHit->GetChannelId());
             fields.Set("opticalWidth", pLArOpHit->GetWidth());
+            fields.Set("opticalStartTime", pLArOpHit->GetStartTime());
 
             return pandora::STATUS_CODE_SUCCESS;
         }
