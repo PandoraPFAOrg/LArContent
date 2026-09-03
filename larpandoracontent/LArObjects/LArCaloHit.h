@@ -307,6 +307,7 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, const
 
     p.m_larTPCVolumeId   = fields.GetOrDefault<unsigned int>("larTPCVolumeId",  0u);
     p.m_daughterVolumeId = fields.GetOrDefault<unsigned int>("daughterVolumeId", 0u);
+    p.m_channelId        = fields.GetOrDefault<unsigned int>("channelId", 0u);
 
     const unsigned int nHitScores = fields.GetOrDefault<unsigned int>("nHitScores", 0u);
     p.m_hitScores.clear();
@@ -336,6 +337,7 @@ inline pandora::StatusCode LArCaloHitFactory::Write(const Object *const pObject,
 
     fields.Set("larTPCVolumeId", pLArCaloHit->GetLArTPCVolumeId());
     fields.Set("daughterVolumeId", pLArCaloHit->GetDaughterVolumeId());
+    fields.Set("channelId", pLArCaloHit->GetChannelId());
 
     const pandora::FloatVector &hitScores(pLArCaloHit->GetHitScores());
     const pandora::StringVector &hitScoreLabels(pLArCaloHit->GetHitScoreLabels());

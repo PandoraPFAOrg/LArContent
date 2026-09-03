@@ -9,12 +9,15 @@
 #ifndef LAR_TPC_FACTORY_H
 #define LAR_TPC_FACTORY_H 1
 
+#include "Geometry/LArReadoutChannel.h"
 #include "Objects/CartesianVector.h"
 
 #include "Pandora/ObjectCreation.h"
 #include "Pandora/PandoraObjectFactories.h"
 
 #include "Persistency/FieldMap.h"
+
+#include <vector>
 
 namespace lar_content
 {

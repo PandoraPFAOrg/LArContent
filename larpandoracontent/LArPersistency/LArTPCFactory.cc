@@ -6,7 +6,6 @@
  *  $Log: $
  */
 
-#include "Geometry/LArReadoutChannel.h"
 #include "Geometry/LArReadoutUnit.h"
 #include "Geometry/LArReadoutVolume.h"
 #include "Geometry/LArTPC.h"
@@ -162,7 +161,14 @@ void LArTPCFactory::ClipLineAgainstBox(const float coordinate, const float theta
     const auto clip = [&](const float p, const float d, const float lo, const float hi)
     {
         if (std::fabs(d) < 1e-9f)
+        {
+            if ((p < lo) || (p > hi))
+            {
+                tMin = 1.f;
+                tMax = 0.f;
+            }
             return;
+        }
 
         const float t0((lo - p) / d), t1((hi - p) / d);
         tMin = std::max(tMin, std::min(t0, t1));
@@ -171,6 +177,14 @@ void LArTPCFactory::ClipLineAgainstBox(const float coordinate, const float theta
 
     clip(y0, dirY, yMin, yMax);
     clip(z0, dirZ, zMin, zMax);
+
+    if (tMin > tMax)
+    {
+        // Shouldn't ever get here, but just in case
+        point1 = CartesianVector(0.f, y0, z0);
+        point2 = point1;
+        return;
+    }
 
     point1 = CartesianVector(0.f, y0 + tMin * dirY, z0 + tMin * dirZ);
     point2 = CartesianVector(0.f, y0 + tMax * dirY, z0 + tMax * dirZ);
