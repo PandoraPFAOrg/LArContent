@@ -49,6 +49,7 @@ private:
      *  @param  startPosition the start position
      *  @param  startDirection the start direction
      *  @param  targetFitResult the target fit result
+     *  @param  isCrossingTPCCandidate boolean to state if outerFitResult and innerFitResult are on opposide sides of TPC gap
      *
      *  @return boolean
      */
@@ -60,11 +61,21 @@ private:
      *
      *  @param  samplingPoint the sampling point
      *  @param  targetFitResult the target fit result
+     *  @param  numGapSteps the number of sampling steps within the gap in the middle of the TPC
+     *  @param  isCrossingTPCCandidate boolean to state if outerFitResult and innerFitResult are on opposide sides of TPC gap
      *
      *  @return boolean
      */
-    bool IsNearCluster(const pandora::CartesianVector &samplingPoint, const TwoDSlidingFitResult &targetFitResult, const float numGapSteps, const bool isCrossingTPCCandidate) const;
+    bool IsNearCluster(const pandora::CartesianVector &samplingPoint, const TwoDSlidingFitResult &targetFitResult, const int numGapSteps, const bool isCrossingTPCCandidate) const;
     
+    /**
+     *  @brief  Finds the volume id values for every lar calo hit in the given fitresult
+     *
+     *  @param  fitResult the input fit result
+     *  @param  volIds the empty set of volume id values that will be modified
+     *
+     *  @return statuscode
+     */
     pandora::StatusCode FindLArTPCVolumeIds(const TwoDSlidingFitResult &fitResult, std::set<unsigned int> &volIds) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -80,8 +91,7 @@ private:
     float m_minMatchedSamplingFraction;      ///< Minimum ratio between matched sampling points and expectation to declare association
     float m_crossTPCStepModifier;            ///< Modifier to scale how much the angle between the startdirection of the sample points and the x-axis of the detector affects the m_maxUnmatchedSampleRun if crossing the APA
     float m_crossTPCOnClusterDistanceModifier; ///< Modifier to scale how much the number of samples that are in the APA gap affects the m_maxOnClusterDistance
-    float m_boostStartStep;                ///< Minimum number of sample steps to cross the APA gap
-    float m_crossTPCMaxAdditionalSteps;      ///< Maximum number of additional steps when sampling proccess crosses the APA gap to prevent circumstances where the value explodes due to angles close to parallel with the APA
+    float m_crossTPCBoostStartStep;                ///< Minimum number of sample steps to cross the APA gap
     float m_gapTolerance;                    ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
     bool m_visualize;                        ///< Whether to visualize sampling points/association diagnostics when enabled in settings
 };
