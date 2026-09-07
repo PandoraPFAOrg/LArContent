@@ -1,7 +1,7 @@
 @PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)
-find_dependency(LArContent 05.00.00 REQUIRED)
+find_dependency(LArContent 05.01.00 REQUIRED)
 find_dependency(TBB QUIET)
 find_dependency(Torch REQUIRED)
 

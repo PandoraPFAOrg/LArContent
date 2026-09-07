@@ -13,7 +13,7 @@ option(LArContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
 
 # Find Dependencies
 if (NOT TARGET PandoraPFA::PandoraSDK)
-    find_package(PandoraSDK 05.00.00 REQUIRED)
+    find_package(PandoraSDK 05.01.00 REQUIRED)
 endif()
 option(PANDORA_MONITORING "Enable Pandora Monitoring" ON)
 if(PANDORA_MONITORING)
