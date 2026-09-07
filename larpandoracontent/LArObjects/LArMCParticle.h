@@ -133,7 +133,6 @@ public:
      */
     bool GetIsCC() const;
 
-
     /**
      *  @brief  Get the visible energy
      *
@@ -293,7 +292,7 @@ inline void LArMCParticle::FillParameters(LArMCParticleParameters &parameters) c
     parameters.m_vertex = this->GetVertex();
     parameters.m_endpoint = this->GetEndpoint();
     parameters.m_particleId = this->GetParticleId();
-    parameters.m_mcParticleType= this->GetMCParticleType();
+    parameters.m_mcParticleType = this->GetMCParticleType();
     // ATTN Set the parent address to the original owner of the mc particle
     parameters.m_pParentAddress = static_cast<const void *>(this);
 }
@@ -335,8 +334,8 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, co
 
     for (int i = 0; i < nTrajPoints; ++i)
     {
-        p.m_trajPoints.push_back(fields.GetOrDefault<pandora::CartesianVector>(
-            "trajPoint_" + std::to_string(i), pandora::CartesianVector(0.f, 0.f, 0.f)));
+        p.m_trajPoints.push_back(
+            fields.GetOrDefault<pandora::CartesianVector>("trajPoint_" + std::to_string(i), pandora::CartesianVector(0.f, 0.f, 0.f)));
     }
 
     return pandora::STATUS_CODE_SUCCESS;

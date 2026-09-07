@@ -46,9 +46,9 @@ public:
     class ExternalEventReadingParameters : public pandora::ExternalParameters
     {
     public:
-        std::string m_geometryFileName;     ///< Name of the file containing geometry information
-        std::string m_eventFileNameList;    ///< Colon-separated list of file names to be processed
-        pandora::InputUInt m_skipToEvent;   ///< Index of first event to consider in input file
+        std::string m_geometryFileName;   ///< Name of the file containing geometry information
+        std::string m_eventFileNameList;  ///< Colon-separated list of file names to be processed
+        pandora::InputUInt m_skipToEvent; ///< Index of first event to consider in input file
     };
 
 private:

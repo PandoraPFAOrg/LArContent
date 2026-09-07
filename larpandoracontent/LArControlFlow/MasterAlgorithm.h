@@ -332,10 +332,10 @@ protected:
     bool m_visualizeOverallRecoStatus;  ///< Whether to display results of current operations
     bool m_shouldRemoveOutOfTimeHits;   ///< Whether to remove out of time hits
 
-    PandoraInstanceList m_crWorkerInstances;          ///< The list of cosmic-ray reconstruction worker instances
-    const pandora::Pandora *m_pSlicingWorkerInstance; ///< The slicing worker instance
-    const pandora::Pandora *m_pSliceNuWorkerInstance; ///< The per-slice neutrino reconstruction worker instance
-    const pandora::Pandora *m_pSliceCRWorkerInstance; ///< The per-slice cosmic-ray reconstruction worker instance
+    PandoraInstanceList m_crWorkerInstances;                                  ///< The list of cosmic-ray reconstruction worker instances
+    const pandora::Pandora *m_pSlicingWorkerInstance;                         ///< The slicing worker instance
+    const pandora::Pandora *m_pSliceNuWorkerInstance;                         ///< The per-slice neutrino reconstruction worker instance
+    const pandora::Pandora *m_pSliceCRWorkerInstance;                         ///< The per-slice cosmic-ray reconstruction worker instance
     mutable std::map<unsigned int, unsigned int> m_daughterVolumeIdOffsetMap; ///< Maps original LArTPC volume id -> id offset for merged instances
 
     bool m_fullWidthCRWorkerWireGaps;        ///< Whether wire-type line gaps in cosmic-ray worker instances should cover all drift time

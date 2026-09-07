@@ -77,10 +77,10 @@ private:
     class UnitInfo
     {
     public:
-        pandora::HitType m_view;     ///< The view of the readout unit
-        unsigned int m_nChannels;    ///< The number of channels in the readout unit
-        float m_referenceCoordinate; ///< The wire-coordinate of channel 0's midpoint
-        float m_pitch;               ///< The signed wire-coordinate difference between adjacent channels
+        pandora::HitType m_view;                              ///< The view of the readout unit
+        unsigned int m_nChannels;                             ///< The number of channels in the readout unit
+        float m_referenceCoordinate;                          ///< The wire-coordinate of channel 0's midpoint
+        float m_pitch;                                        ///< The signed wire-coordinate difference between adjacent channels
         pandora::CartesianVector m_unitCenter{0.f, 0.f, 0.f}; ///< The center of the readout unit's own active-area box (X unused)
         pandora::CartesianVector m_unitSize{0.f, 0.f, 0.f};   ///< The size of the readout unit's own active-area box (X unused)
     };

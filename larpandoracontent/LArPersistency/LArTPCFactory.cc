@@ -119,8 +119,8 @@ StatusCode LArTPCFactory::Read(Parameters &parameters, const FieldMap &fields) c
                     const float otherTheta(LArTPCFactory::GetWireAngle(otherInfo.m_view, thetaU, thetaV, thetaW));
 
                     channelParams.m_channelIntervalArray[slot++] = {otherInfo.m_view,
-                        LArTPCFactory::ComputeChannelInterval(selfCoordinate, theta, unitInfo.m_unitCenter, unitInfo.m_unitSize,
-                            otherTheta, otherInfo.m_referenceCoordinate, otherInfo.m_pitch, otherInfo.m_nChannels)};
+                        LArTPCFactory::ComputeChannelInterval(selfCoordinate, theta, unitInfo.m_unitCenter, unitInfo.m_unitSize, otherTheta,
+                            otherInfo.m_referenceCoordinate, otherInfo.m_pitch, otherInfo.m_nChannels)};
                 }
 
                 unitParams.m_channelParametersVector.push_back(channelParams);

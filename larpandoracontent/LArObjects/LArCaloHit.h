@@ -305,9 +305,9 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, const
 {
     LArCaloHitParameters &p(dynamic_cast<LArCaloHitParameters &>(parameters));
 
-    p.m_larTPCVolumeId   = fields.GetOrDefault<unsigned int>("larTPCVolumeId",  0u);
+    p.m_larTPCVolumeId = fields.GetOrDefault<unsigned int>("larTPCVolumeId", 0u);
     p.m_daughterVolumeId = fields.GetOrDefault<unsigned int>("daughterVolumeId", 0u);
-    p.m_channelId        = fields.GetOrDefault<unsigned int>("channelId", 0u);
+    p.m_channelId = fields.GetOrDefault<unsigned int>("channelId", 0u);
 
     const unsigned int nHitScores = fields.GetOrDefault<unsigned int>("nHitScores", 0u);
     p.m_hitScores.clear();
@@ -317,10 +317,8 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, const
 
     for (unsigned int i = 0; i < nHitScores; ++i)
     {
-        p.m_hitScores.push_back(fields.GetOrDefault<float>(
-            "hitScore_" + std::to_string(i), 0.f));
-        p.m_hitScoreLabels.push_back(fields.GetOrDefault<std::string>(
-            "hitScoreLabel_" + std::to_string(i), std::string()));
+        p.m_hitScores.push_back(fields.GetOrDefault<float>("hitScore_" + std::to_string(i), 0.f));
+        p.m_hitScoreLabels.push_back(fields.GetOrDefault<std::string>("hitScoreLabel_" + std::to_string(i), std::string()));
     }
 
     return pandora::STATUS_CODE_SUCCESS;
