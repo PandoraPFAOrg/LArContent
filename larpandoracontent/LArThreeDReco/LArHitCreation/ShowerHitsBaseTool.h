@@ -57,14 +57,15 @@ private:
      *  @brief  Filter a list of calo hits to find those within a specified tolerance of a give x position
      *
      *  @param  x the x position
-     *  @param  xTolerance the x tolerance
+     *  @param  daughterVolumeId the daughter volume id of the hit in question
      *  @param  inputCaloHitVector the input calo hit vector
      *  @param  outputCaloHitVector to receive the output calo hit vector
      */
-    void FilterCaloHits(const float x, const float xTolerance, const pandora::CaloHitVector &inputCaloHitVector,
+    void FilterCaloHits(const float x, const unsigned int daughterVolumeId, const pandora::CaloHitVector &inputCaloHitVector,
         pandora::CaloHitVector &outputCaloHitVector) const;
 
-    float m_xTolerance; ///< The x tolerance to use when looking for associated calo hits between views
+    float m_xTolerance;    ///< The x tolerance to use when looking for associated calo hits between views
+    bool m_strictBounding; ///< Whether to apply daughter volume match requirements
 };
 
 } // namespace lar_content
