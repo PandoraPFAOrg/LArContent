@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
 
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
@@ -19,7 +20,8 @@ namespace lar_content
 {
 
 ShowerHitsBaseTool::ShowerHitsBaseTool() :
-    m_xTolerance(1.f)
+    m_xTolerance(1.f),
+    m_strictBounding(false)
 {
 }
 
@@ -59,9 +61,10 @@ void ShowerHitsBaseTool::GetShowerHits3D(const CaloHitVector &inputTwoDHits, con
     {
         try
         {
+            const unsigned int daughterVolumeId{m_strictBounding ? dynamic_cast<const LArCaloHit *>(pCaloHit2D)->GetDaughterVolumeId() : 0};
             CaloHitVector filteredHits1, filteredHits2;
-            this->FilterCaloHits(pCaloHit2D->GetPositionVector().GetX(), m_xTolerance, caloHitVector1, filteredHits1);
-            this->FilterCaloHits(pCaloHit2D->GetPositionVector().GetX(), m_xTolerance, caloHitVector2, filteredHits2);
+            this->FilterCaloHits(pCaloHit2D->GetPositionVector().GetX(), daughterVolumeId, caloHitVector1, filteredHits1);
+            this->FilterCaloHits(pCaloHit2D->GetPositionVector().GetX(), daughterVolumeId, caloHitVector2, filteredHits2);
 
             ProtoHit protoHit(pCaloHit2D);
             this->GetShowerHit3D(filteredHits1, filteredHits2, protoHit);
@@ -77,13 +80,18 @@ void ShowerHitsBaseTool::GetShowerHits3D(const CaloHitVector &inputTwoDHits, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, const CaloHitVector &inputCaloHitVector, CaloHitVector &outputCaloHitVector) const
+void ShowerHitsBaseTool::FilterCaloHits(
+    const float x, const unsigned int daughterVolumeId, const CaloHitVector &inputCaloHitVector, CaloHitVector &outputCaloHitVector) const
 {
     for (const CaloHit *const pCaloHit : inputCaloHitVector)
     {
+        if (m_strictBounding)
+            if (daughterVolumeId != dynamic_cast<const LArCaloHit *>(pCaloHit)->GetDaughterVolumeId())
+                continue;
+
         const float deltaX(pCaloHit->GetPositionVector().GetX() - x);
 
-        if (std::fabs(deltaX) < xTolerance)
+        if (std::fabs(deltaX) < m_xTolerance)
             outputCaloHitVector.push_back(pCaloHit);
     }
 }
@@ -93,6 +101,8 @@ void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, c
 StatusCode ShowerHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "XTolerance", m_xTolerance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "StrictBoundsChecking", m_strictBounding));
 
     return HitCreationBaseTool::ReadSettings(xmlHandle);
 }
