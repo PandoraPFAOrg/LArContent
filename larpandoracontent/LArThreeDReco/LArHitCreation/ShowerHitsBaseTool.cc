@@ -86,8 +86,15 @@ void ShowerHitsBaseTool::FilterCaloHits(
     for (const CaloHit *const pCaloHit : inputCaloHitVector)
     {
         if (m_strictBounding)
-            if (daughterVolumeId != dynamic_cast<const LArCaloHit *>(pCaloHit)->GetDaughterVolumeId())
+        {
+            const LArCaloHit *pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
+
+            if (pLArCaloHit == nullptr)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            if (daughterVolumeId != pLArCaloHit->GetDaughterVolumeId())
                 continue;
+        }
 
         const float deltaX(pCaloHit->GetPositionVector().GetX() - x);
 
