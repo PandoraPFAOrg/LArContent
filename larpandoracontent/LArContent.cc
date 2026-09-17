@@ -26,6 +26,7 @@
 #include "larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoIdTool.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoSliceSelectionTool.h"
+#include "larpandoracontent/LArCheating/CheatingMvaPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingSecondaryVertexAlgorithm.h"
@@ -269,6 +270,7 @@
     d("LArCheatingNeutrinoCreation",            CheatingNeutrinoCreationAlgorithm)                                              \
     d("LArCheatingNeutrinoDaughterVertices",    CheatingNeutrinoDaughterVerticesAlgorithm)                                      \
     d("LArCheatingPfoCharacterisation",         CheatingPfoCharacterisationAlgorithm)                                           \
+    d("LArCheatingMvaPfoCharacterisation",      CheatingMvaPfoCharacterisationAlgorithm)                                        \
     d("LArCheatingPfoCreation",                 CheatingPfoCreationAlgorithm)                                                   \
     d("LArCheatingCosmicRayRemoval",            CheatingCosmicRayRemovalAlgorithm)                                              \
     d("LArCheatingSecondaryVertex",             CheatingSecondaryVertexAlgorithm)                                               \
