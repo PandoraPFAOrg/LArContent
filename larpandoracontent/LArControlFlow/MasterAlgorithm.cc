@@ -240,19 +240,25 @@ StatusCode MasterAlgorithm::InitializeWorkerInstances()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::CopyMCParticles() const
+StatusCode MasterAlgorithm::CopyMCParticles(PandoraInstanceList *instances) const
 {
+    if (!m_passMCParticlesToWorkerInstances)
+        return STATUS_CODE_SUCCESS;
+
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputMCParticleListName, pMCParticleList));
 
-    PandoraInstanceList pandoraWorkerInstances(m_crWorkerInstances);
-    if (m_pSlicingWorkerInstance)
-        pandoraWorkerInstances.push_back(m_pSlicingWorkerInstance);
-    if (m_pSliceNuWorkerInstance)
-        pandoraWorkerInstances.push_back(m_pSliceNuWorkerInstance);
-    if (m_pSliceCRWorkerInstance)
-        pandoraWorkerInstances.push_back(m_pSliceCRWorkerInstance);
+    PandoraInstanceList pandoraWorkerInstances(instances ? *instances : PandoraInstanceList(m_crWorkerInstances));
 
+    if (!instances)
+    {
+        if (m_pSlicingWorkerInstance)
+            pandoraWorkerInstances.push_back(m_pSlicingWorkerInstance);
+        if (m_pSliceNuWorkerInstance)
+            pandoraWorkerInstances.push_back(m_pSliceNuWorkerInstance);
+        if (m_pSliceCRWorkerInstance)
+            pandoraWorkerInstances.push_back(m_pSliceCRWorkerInstance);
+    }
     LArMCParticleFactory mcParticleFactory;
 
     for (const Pandora *const pPandoraWorker : pandoraWorkerInstances)
@@ -262,6 +268,17 @@ StatusCode MasterAlgorithm::CopyMCParticles() const
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::CopyMCParticles(const pandora::Pandora* instance) const
+{
+    if (!instance)
+        return STATUS_CODE_SUCCESS;
+
+    PandoraInstanceList instanceVector({instance});
+    return this->CopyMCParticles(&instanceVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -490,6 +507,7 @@ StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHit
             std::cout << "Running slicing worker instance" << std::endl;
 
         const PfoList *pSlicePfos(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles(m_pSlicingWorkerInstance));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSlicingWorkerInstance));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSlicingWorkerInstance, pSlicePfos));
 
@@ -534,6 +552,9 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
     }
 
     unsigned int sliceCounter(0);
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles(m_pSliceNuWorkerInstance));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles(m_pSliceCRWorkerInstance));
 
     for (const CaloHitList &sliceHits : selectedSliceVector)
     {
