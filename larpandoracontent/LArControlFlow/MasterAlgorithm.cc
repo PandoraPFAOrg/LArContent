@@ -274,6 +274,9 @@ StatusCode MasterAlgorithm::CopyMCParticles(PandoraInstanceList *instances) cons
 
 StatusCode MasterAlgorithm::CopyMCParticles(const pandora::Pandora* instance) const
 {
+    if (!instance)
+        return STATUS_CODE_SUCCESS;
+
     PandoraInstanceList instanceVector({instance});
     return this->CopyMCParticles(&instanceVector);
 }
