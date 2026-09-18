@@ -73,7 +73,7 @@ void LArPfoHelper::GetIsolatedCaloHits(const ParticleFlowObject *const pPfo, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPfoHelper::GetAllCaloHits(const ParticleFlowObject *const pPfo, CaloHitList &caloHitList)
+void LArPfoHelper::GetAllCaloHits2D(const ParticleFlowObject *const pPfo, CaloHitList &caloHitList)
 {
     LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitList);
     LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitList);

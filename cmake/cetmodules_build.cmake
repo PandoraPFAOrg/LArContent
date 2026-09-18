@@ -4,10 +4,12 @@ cet_set_compiler_flags(
   WERROR
   NO_UNDEFINED
   EXTRA_FLAGS -pedantic
+  $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-enum-float-conversion>
+  $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-enum-enum-conversion>
 )
 cet_report_compiler_flags(REPORT_THRESHOLD VERBOSE)
 
-find_package(PandoraSDK 05.00.00 REQUIRED EXPORT)
+find_package(PandoraSDK 05.01.00 REQUIRED EXPORT)
 
 option(PANDORA_MONITORING "Enable Pandora Monitoring" TRUE)
 if(PANDORA_MONITORING)
@@ -16,6 +18,7 @@ endif()
 
 find_package(Eigen3 3.3 REQUIRED EXPORT)
 
+find_package(TBB QUIET EXPORT)
 find_package(Torch QUIET EXPORT)
 if(Torch_FOUND)
   set(PANDORA_LIBTORCH ON)
@@ -49,8 +52,6 @@ if(PANDORA_MONITORING)
 endif()
 
 if(PANDORA_LIBTORCH)
-  find_package(TBB REQUIRED EXPORT)
-
   include(${PANDORA_PROJECT_ROOT}/cmake/LArDLContent_sources.cmake)
 
   if(NOT DEFINED LAR_DL_CONTENT_SRCS OR LAR_DL_CONTENT_SRCS STREQUAL "")
@@ -94,6 +95,7 @@ set(LAR_CONTENT_DIRS
   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching
   larpandoracontent/LArThreeDReco/LArPfoMopUp
   larpandoracontent/LArThreeDReco/LArPfoRecovery
+  larpandoracontent/LArThreeDReco/LArPfoStitching
   larpandoracontent/LArThreeDReco/LArShowerFragments
   larpandoracontent/LArThreeDReco/LArShowerMatching
   larpandoracontent/LArThreeDReco/LArThreeDBase

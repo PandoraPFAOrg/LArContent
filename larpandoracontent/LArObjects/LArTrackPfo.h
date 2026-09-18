@@ -95,17 +95,17 @@ public:
      *  @brief  Read any additional (derived class only) object parameters from file using the specified file reader
      *
      *  @param  parameters the parameters to pass in constructor
-     *  @param  fileReader the file reader, used to extract any additional parameters from file
+     *  @param  fields the field map to read from
      */
-    pandora::StatusCode Read(Parameters &parameters, pandora::FileReader &fileReader) const;
+    pandora::StatusCode Read(Parameters &parameters, const pandora::FieldMap &fields) const;
 
     /**
      *  @brief  Persist any additional (derived class only) object parameters using the specified file writer
      *
      *  @param  pObject the address of the object to persist
-     *  @param  fileWriter the file writer
+     *  @param  fields the field map to write to
      */
-    pandora::StatusCode Write(const pandora::ParticleFlowObject *const pObject, pandora::FileWriter &fileWriter) const;
+    pandora::StatusCode Write(const pandora::ParticleFlowObject *const pObject, pandora::FieldMap &fields) const;
 
     /**
      *  @brief  Create an object with the given parameters
@@ -136,7 +136,7 @@ inline pandora::StatusCode LArTrackPfoFactory::Create(const Parameters &paramete
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArTrackPfoFactory::Read(Parameters &, pandora::FileReader &) const
+inline pandora::StatusCode LArTrackPfoFactory::Read(Parameters &, const pandora::FieldMap &) const
 {
     // TODO: Provide this functionality when necessary
 
@@ -145,7 +145,7 @@ inline pandora::StatusCode LArTrackPfoFactory::Read(Parameters &, pandora::FileR
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArTrackPfoFactory::Write(const pandora::ParticleFlowObject *, pandora::FileWriter &) const
+inline pandora::StatusCode LArTrackPfoFactory::Write(const pandora::ParticleFlowObject *, pandora::FieldMap &) const
 {
     // TODO: Provide this functionality when necessary
 

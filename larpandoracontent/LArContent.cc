@@ -41,7 +41,6 @@
 #include "larpandoracontent/LArControlFlow/PreProcessingAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/SimpleNeutrinoIdTool.h"
 #include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
-#include "larpandoracontent/LArControlFlow/StitchingCosmicRayMergingTool.h"
 #include "larpandoracontent/LArControlFlow/StreamingAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/TestBeamCosmicRayTaggingTool.h"
 
@@ -79,6 +78,7 @@
 #include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
 #include "larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.h"
 #include "larpandoracontent/LArReclustering/LArExample/RandomFigureOfMeritTool.h"
+#include "larpandoracontent/LArReclustering/ShortTrackReclusteringAlgorithm.h"
 #include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 
 #include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
@@ -122,6 +122,7 @@
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/PlaneSolverAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/TwoViewShowerHitsTool.h"
@@ -138,6 +139,7 @@
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMopUpAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoRecovery/TrackRecoveryAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoRecovery/VertexBasedPfoRecoveryAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
@@ -168,6 +170,9 @@
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewSimpleTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
+
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/PfoStitchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingCosmicRayMergingTool.h"
 
 #include "larpandoracontent/LArVertex/EnergyDepositionAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
@@ -292,6 +297,7 @@
     d("LArTwoViewDeltaRayMatching",             TwoViewDeltaRayMatchingAlgorithm)                                               \
     d("LArOneViewDeltaRayMatching",             OneViewDeltaRayMatchingAlgorithm)                                               \
     d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
+    d("LArPlaneSolver",                         PlaneSolverAlgorithm)                                                           \
     d("LArThreeDHitCreation",                   ThreeDHitCreationAlgorithm)                                                     \
     d("LArThreeDLongitudinalTracks",            ThreeViewLongitudinalTracksAlgorithm)                                           \
     d("LArRecursivePfoMopUp",                   RecursivePfoMopUpAlgorithm)                                                     \
@@ -301,6 +307,7 @@
     d("LArShowerMergingPfoMopUp",               ShowerMergingPfoMopUpAlgorithm)                                                 \
     d("LArVertexBasedPfoMopUp",                 VertexBasedPfoMopUpAlgorithm)                                                   \
     d("LArParticleRecovery",                    ParticleRecoveryAlgorithm)                                                      \
+    d("LArTrackRecovery",                       TrackRecoveryAlgorithm)                                                         \
     d("LArVertexBasedPfoRecovery",              VertexBasedPfoRecoveryAlgorithm)                                                \
     d("LArThreeDRemnants",                      ThreeViewRemnantsAlgorithm)                                                     \
     d("LArThreeDShowers",                       ThreeViewShowersAlgorithm)                                                      \
@@ -351,10 +358,12 @@
     d("LArListDeletion",                        ListDeletionAlgorithm)                                                          \
     d("LArListMerging",                         ListMergingAlgorithm)                                                           \
     d("LArPfoHitCleaning",                      PfoHitCleaningAlgorithm)                                                        \
+    d("LArPfoStitching",                        PfoStitchingAlgorithm)                                                          \
     d("LArListPruning",                         ListPruningAlgorithm)                                                           \
     d("LArThreeDReclustering",                  ThreeDReclusteringAlgorithm)                                                    \
     d("LArThreeDMultiReclustering",             ThreeDMultiReclusteringAlgorithm)                                               \
     d("LArRandomClustering",                    RandomClusteringAlgorithm)                                                      \
+    d("LArShortTrackReclustering",              ShortTrackReclusteringAlgorithm)                                                \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \

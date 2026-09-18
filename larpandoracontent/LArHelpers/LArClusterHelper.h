@@ -9,6 +9,7 @@
 #define LAR_CLUSTER_HELPER_H 1
 
 #include "Objects/Cluster.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 namespace lar_content
 {
@@ -323,6 +324,15 @@ public:
      *  @return true if there is a hit between the two hits, false otherwise
      */
     static bool HasBlockedPath(const pandora::CaloHitVector &caloHits, const pandora::CaloHit *const pCaloHit1, const pandora::CaloHit *const pCaloHit2);
+
+    /**
+     *  @brief  Constructs a list of hits from a cluster ordered along a sliding fit trajectory.
+     *
+     *  @param  pCluster the cluster whose hits are to be ordered
+     *  @param  sfr the result of the sliding linear fit of the clusters
+     *  @param  orderedHits the list in which to store the ordered hits
+     */
+    static void OrderHitsAlongTrajectory(const pandora::Cluster *const pCluster, const TwoDSlidingFitResult &sfr, pandora::CaloHitList &orderedHits);
 
     /**
      *  @brief  Sort clusters by number of occupied layers, and by inner layer, then energy in event of a tie

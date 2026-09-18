@@ -76,18 +76,23 @@ private:
      */
     pandora::FileType GetFileType(const std::string &fileName) const;
 
+    /**
+     *  @brief  Install the schema migrations this build knows about on a reader, before its global header is read.
+     *
+     *  @param  fileReader the reader to configure
+     */
+    void ConfigureReader(pandora::FileReader &fileReader) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string m_geometryFileName;              ///< Name of the file containing geometry information
     std::string m_eventFileName;                 ///< Name of the current file containing event information
     pandora::StringVector m_eventFileNameVector; ///< Vector of file names to be processed
 
-    unsigned int m_skipToEvent;          ///< Index of first event to consider in first input file
-    bool m_isEnhancedEventFile;          ///< Whether the event file has a 'file describing' block
-    bool m_useLArCaloHits;               ///< Whether to read lar calo hits, or standard pandora calo hits
-    unsigned int m_larCaloHitVersion;    ///< LArCaloHit version for LArCaloHitFactory
-    bool m_useLArMCParticles;            ///< Whether to read lar mc particles, or standard pandora mc particles
-    unsigned int m_larMCParticleVersion; ///< LArMCParticle version for LArMCParticleFactory
+    unsigned int m_skipToEvent;  ///< Index of first event to consider in first input file
+    bool m_useLArCaloHits;       ///< Whether to read lar calo hits, or standard pandora calo hits
+    bool m_useLArMCParticles;    ///< Whether to read lar mc particles, or standard pandora mc particles
+    bool m_strictSchemaChecking; ///< Whether an unreadable schema version is an error rather than a warning
 
     pandora::FileReader *m_pEventFileReader; ///< Address of the event file reader
 };

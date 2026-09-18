@@ -44,6 +44,15 @@ public:
     static void Vectorize(const T &caloHitContainer, Eigen::MatrixXf &centre, Eigen::MatrixXf &low, Eigen::MatrixXf &high);
 
     /**
+     *  @brief  Convert a container of 3D calo hits into an Eigen matrix.
+     *
+     *  @param  caloHitContainer the calo hit list containing the hits from which to construct a maxtrix
+     *  @param  hitMatrix the output Eigen matrix
+     */
+    template <class T>
+    static void Vectorize3D(const T &caloHitContainer, Eigen::MatrixXf &hitMatrix);
+
+    /**
      *  @brief  Retrieve the angle, coutner-clockwise relative to the x axis, between all hits in a matrix and a specified origin.
      *
      *  @param  hitMatrix the input collection of hits

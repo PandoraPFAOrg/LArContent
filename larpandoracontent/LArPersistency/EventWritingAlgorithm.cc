@@ -18,6 +18,7 @@
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
 #include "larpandoracontent/LArPersistency/EventWritingAlgorithm.h"
+#include "larpandoracontent/LArPersistency/LArTPCFactory.h"
 
 using namespace pandora;
 
@@ -32,15 +33,12 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldWriteGeometry(false),
     m_writtenGeometry(false),
     m_shouldWriteEvents(true),
-    m_fileMajorVersion(2),
-    m_fileMinorVersion(0),
     m_writtenEventGlobalHeader(false),
     m_shouldWriteMCRelationships(true),
     m_shouldWriteTrackRelationships(true),
     m_shouldOverwriteEventFile(false),
     m_shouldOverwriteGeometryFile(false),
     m_useLArCaloHits(true),
-    m_larCaloHitVersion(1),
     m_useLArMCParticles(true),
     m_shouldFilterByNuanceCode(false),
     m_filterNuanceCode(0),
@@ -83,17 +81,13 @@ StatusCode EventWritingAlgorithm::Initialize()
         const FileMode fileMode(m_shouldOverwriteGeometryFile ? OVERWRITE : APPEND);
 
         if (BINARY == m_geometryFileType)
-        {
-            m_pGeometryFileWriter = new BinaryFileWriter(this->GetPandora(), m_geometryFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
-        }
+            m_pGeometryFileWriter = new BinaryFileWriter(this->GetPandora(), m_geometryFileName, fileMode);
         else if (XML == m_geometryFileType)
-        {
-            m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
-        }
+            m_pGeometryFileWriter = new XmlFileWriter(this->GetPandora(), m_geometryFileName, fileMode);
         else
-        {
             return STATUS_CODE_FAILURE;
-        }
+
+        m_pGeometryFileWriter->SetFactory(new LArTPCFactory());
     }
 
     if (m_shouldWriteEvents)
@@ -101,23 +95,17 @@ StatusCode EventWritingAlgorithm::Initialize()
         const FileMode fileMode(m_shouldOverwriteEventFile ? OVERWRITE : APPEND);
 
         if (BINARY == m_eventFileType)
-        {
-            m_pEventFileWriter = new BinaryFileWriter(this->GetPandora(), m_eventFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
-        }
+            m_pEventFileWriter = new BinaryFileWriter(this->GetPandora(), m_eventFileName, fileMode);
         else if (XML == m_eventFileType)
-        {
-            m_pEventFileWriter = new XmlFileWriter(this->GetPandora(), m_eventFileName, fileMode, m_fileMajorVersion, m_fileMinorVersion);
-        }
+            m_pEventFileWriter = new XmlFileWriter(this->GetPandora(), m_eventFileName, fileMode);
         else
-        {
             return STATUS_CODE_FAILURE;
-        }
 
         if (m_useLArCaloHits)
-            m_pEventFileWriter->SetFactory(new LArCaloHitFactory(m_larCaloHitVersion));
+            m_pEventFileWriter->SetFactory(new LArCaloHitFactory());
 
         if (m_useLArMCParticles)
-            m_pEventFileWriter->SetFactory(new LArMCParticleFactory);
+            m_pEventFileWriter->SetFactory(new LArMCParticleFactory());
     }
 
     return STATUS_CODE_SUCCESS;
@@ -130,6 +118,7 @@ StatusCode EventWritingAlgorithm::Run()
     // ATTN Should complete geometry creation in LArSoft begin job, but some channel status service functionality unavailable at that point
     if (!m_writtenGeometry && m_pGeometryFileWriter && m_shouldWriteGeometry)
     {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pGeometryFileWriter->WriteGlobalHeader());
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pGeometryFileWriter->WriteGeometry());
         m_writtenGeometry = true;
     }
@@ -283,16 +272,12 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
 
         if (std::string(".xml") == fileExtension)
-        {
             m_geometryFileType = XML;
-        }
         else if (std::string(".pndr") == fileExtension)
-        {
             m_geometryFileType = BINARY;
-        }
         else
         {
-            std::cout << "EventReadingAlgorithm: Unknown geometry file type specified " << std::endl;
+            std::cout << "EventWritingAlgorithm: Unknown geometry file type specified" << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
         }
     }
@@ -308,25 +293,15 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
 
         if (std::string(".xml") == fileExtension)
-        {
             m_eventFileType = XML;
-        }
         else if (std::string(".pndr") == fileExtension)
-        {
             m_eventFileType = BINARY;
-        }
         else
         {
-            std::cout << "EventReadingAlgorithm: Unknown event file type specified " << std::endl;
+            std::cout << "EventWritingAlgorithm: Unknown event file type specified" << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
         }
     }
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FileMajorVersion", m_fileMajorVersion));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FileMinorVersion", m_fileMinorVersion));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ShouldWriteMCRelationships", m_shouldWriteMCRelationships));
@@ -341,9 +316,6 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         XmlHelper::ReadValue(xmlHandle, "ShouldOverwriteGeometryFile", m_shouldOverwriteGeometryFile));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArCaloHits", m_useLArCaloHits));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LArCaloHitVersion", m_larCaloHitVersion));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArMCParticles", m_useLArMCParticles));

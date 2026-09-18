@@ -13,7 +13,7 @@ option(LArContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
 
 # Find Dependencies
 if (NOT TARGET PandoraPFA::PandoraSDK)
-    find_package(PandoraSDK 05.00.00 REQUIRED)
+    find_package(PandoraSDK 05.01.00 REQUIRED)
 endif()
 option(PANDORA_MONITORING "Enable Pandora Monitoring" ON)
 if(PANDORA_MONITORING)
@@ -23,8 +23,8 @@ if(PANDORA_MONITORING)
 endif()
 find_package(Eigen3 3.3 REQUIRED)
 if(PANDORA_LIBTORCH)
+    find_package(TBB QUIET)
     find_package(Torch REQUIRED)
-#    find_package(TBB REQUIRED)
 endif()
 
 #include(PandoraCMakeSettings)
@@ -79,7 +79,6 @@ if(PANDORA_LIBTORCH)
 #    target_link_libraries(${DL_PROJECT_NAME} PUBLIC
 #        PandoraPFA::${PROJECT_NAME}
 #        Torch::torch
-##        TBB::tbb
 #    )
 ####### End modern version
 

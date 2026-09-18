@@ -78,8 +78,6 @@ private:
     bool m_shouldWriteEvents;    ///< Whether to write events to a specified file
     std::string m_eventFileName; ///< Name of the output event file
 
-    unsigned int m_fileMajorVersion; ///< Major version of the output file
-    unsigned int m_fileMinorVersion; ///< Minor version of the output file
     bool m_writtenEventGlobalHeader; ///< Whether the global header has been written to the output event file
 
     bool m_shouldWriteMCRelationships;    ///< Whether to write mc relationship information to the events file
@@ -88,9 +86,8 @@ private:
     bool m_shouldOverwriteEventFile;    ///< Whether to overwrite existing event file with specified name, or append
     bool m_shouldOverwriteGeometryFile; ///< Whether to overwrite existing geometry file with specified name, or append
 
-    bool m_useLArCaloHits;            ///< Whether to write lar calo hits, or standard pandora calo hits
-    unsigned int m_larCaloHitVersion; ///< LArCaloHit version for LArCaloHitFactory
-    bool m_useLArMCParticles;         ///< Whether to write lar mc particles, or standard pandora mc particles
+    bool m_useLArCaloHits;    ///< Whether to write lar calo hits, or standard pandora calo hits
+    bool m_useLArMCParticles; ///< Whether to write lar mc particles, or standard pandora mc particles
 
     bool m_shouldFilterByNuanceCode; ///< Whether to filter output by nuance code
     int m_filterNuanceCode;          ///< The filter nuance code (required if specify filter by nuance code)

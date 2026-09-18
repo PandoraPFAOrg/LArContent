@@ -233,8 +233,7 @@ pandora::StatusCode DlTrackCharacterisationAlgorithm::GetAllTrackFeatures(PfoToT
         std::advance(iter, p);
 
         CaloHitList trackHits;
-        // This actually gets all 2D calo hits
-        LArPfoHelper::GetAllCaloHits(*iter, trackHits);
+        LArPfoHelper::GetAllCaloHits2D(*iter, trackHits);
         if (trackHits.empty())
             continue;
 
@@ -300,7 +299,7 @@ void DlTrackCharacterisationAlgorithm::GetTrackAuxillaryInfo(const ParticleFlowO
         if (pDescendantPfo == pPfo)
             continue;
         CaloHitList descendantHits;
-        LArPfoHelper::GetAllCaloHits(pDescendantPfo, descendantHits);
+        LArPfoHelper::GetAllCaloHits2D(pDescendantPfo, descendantHits);
         nDescendantHits += descendantHits.size();
     }
     trackFeatures.AddAuxillaryValue(nDescendantHits);

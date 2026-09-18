@@ -316,6 +316,15 @@ public:
     static void GetMCToSelfMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcToSelfMap);
 
     /*
+     *  @brief  Retrieve the map from MC to calo hits for all particles
+     *
+     *  @param  caloHitList The calo hit list for which MC particle matches are to be determined
+     *  @param  mcToHitsMap The map to populate
+     *  @param  allowSharing Whether to allow hits to be shared between multiple MC particles
+     **/
+    static void GetMCToHitsMap(const pandora::CaloHitList &caloHitList, MCContributionMap &mcToHitsMap, const bool allowSharing = false);
+
+    /*
      *  @brief  Retrieve the map from MC to calo hits for reconstructable particles
      *
      *  @param  pCaloHitList2D The calo hit list for which MC particle matches are to be determined

@@ -17,7 +17,9 @@
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingBaseTool.h"
 #include "larpandoracontent/LArControlFlow/SliceIdBaseTool.h"
 #include "larpandoracontent/LArControlFlow/SliceSelectionBaseTool.h"
-#include "larpandoracontent/LArControlFlow/StitchingBaseTool.h"
+
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingPfoOperations.h"
 
 #include <unordered_map>
 
@@ -28,15 +30,13 @@ class LArMCParticleFactory;
 
 typedef std::vector<pandora::CaloHitList> SliceVector;
 typedef std::vector<pandora::PfoList> SliceHypotheses;
-typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
-typedef std::unordered_map<const pandora::ParticleFlowObject *, float> PfoToFloatMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  MasterAlgorithm class
  */
-class MasterAlgorithm : public pandora::ExternallyConfiguredAlgorithm
+class MasterAlgorithm : public pandora::ExternallyConfiguredAlgorithm, public StitchingPfoOperations
 {
 public:
     /**
@@ -60,26 +60,24 @@ public:
         pandora::InputBool m_printOverallRecoStatus;      ///< Whether to print current operation status messages
     };
 
-    typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::LArTPC *> PfoToLArTPCMap;
-
     /**
      *  @brief  Shift a Pfo hierarchy by a specified x0 value
      *
-     *  @param  pPfo the address of the parent pfo
-     *  @param  stitchingInfo  the source for additional, local, stitching information
+     *  @param  pParentPfo the address of the parent pfo
+     *  @param  pfoToLArTPCMap the pfo to lar tpc map
      *  @param  x0 the x0 correction relative to the input pfo
      */
-    void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap, const float x0) const;
+    void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap, const float x0) const override;
 
     /**
      *  @brief  Stitch together a pair of pfos
      *
      *  @param  pPfoToEnlarge the address of the pfo to enlarge
      *  @param  pPfoToDelete the address of the pfo to delete (will become a dangling pointer)
-     *  @param  stitchingInfo the source for additional, local, stitching information
+     *  @param  pfoToLArTPCMap the pfo to lar tpc map
      */
     void StitchPfos(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::ParticleFlowObject *const pPfoToDelete,
-        PfoToLArTPCMap &pfoToLArTPCMap) const;
+        PfoToLArTPCMap &pfoToLArTPCMap) const override;
 
 protected:
     /**
@@ -94,7 +92,7 @@ protected:
 
     typedef std::map<unsigned int, LArTPCHitList> VolumeIdToHitListMap;
 
-    pandora::StatusCode Run();
+    pandora::StatusCode Run() override;
 
     /**
      *  @brief  Initialize pandora worker instances
@@ -189,7 +187,7 @@ protected:
     /**
      *  @brief  Reset all worker instances
      */
-    pandora::StatusCode Reset();
+    pandora::StatusCode Reset() override;
 
     /**
      *  @brief  Copy a specified calo hit to the provided pandora instance
@@ -297,13 +295,24 @@ protected:
         const std::string &settingsFile, const std::string &name) const;
 
     /**
+     *  @brief  Append the readout volume parameters from a given LArTPC into a readout volume parameters vector, offsetting each readout volume's
+     *          id to maintain uniqueness when merging multiple LArTPCs into one worker instance
+     *
+     *  @param  larTPC the source LArTPC
+     *  @param  idOffset the offset to apply to each readout volume's id
+     *  @param  readoutVolumeParametersVector the vector to append to
+     */
+    void AppendReadoutVolumeParameters(const pandora::LArTPC &larTPC, const unsigned int idOffset,
+        object_creation::LArReadoutVolumeParametersVector &readoutVolumeParametersVector) const;
+
+    /**
      *  @brief  Register custom content, such as algorithms or algorithm tools, with a specified pandora instance
      *
      *  @param  pPandora the address of the pandora instance
      */
     virtual pandora::StatusCode RegisterCustomContent(const pandora::Pandora *const pPandora) const;
 
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
     /**
      *  @brief  Read settings from external steering parameters block, if present, otherwise from xml as standard
@@ -332,10 +341,11 @@ protected:
     bool m_visualizeOverallRecoStatus;  ///< Whether to display results of current operations
     bool m_shouldRemoveOutOfTimeHits;   ///< Whether to remove out of time hits
 
-    PandoraInstanceList m_crWorkerInstances;          ///< The list of cosmic-ray reconstruction worker instances
-    const pandora::Pandora *m_pSlicingWorkerInstance; ///< The slicing worker instance
-    const pandora::Pandora *m_pSliceNuWorkerInstance; ///< The per-slice neutrino reconstruction worker instance
-    const pandora::Pandora *m_pSliceCRWorkerInstance; ///< The per-slice cosmic-ray reconstruction worker instance
+    PandoraInstanceList m_crWorkerInstances;                                  ///< The list of cosmic-ray reconstruction worker instances
+    const pandora::Pandora *m_pSlicingWorkerInstance;                         ///< The slicing worker instance
+    const pandora::Pandora *m_pSliceNuWorkerInstance;                         ///< The per-slice neutrino reconstruction worker instance
+    const pandora::Pandora *m_pSliceCRWorkerInstance;                         ///< The per-slice cosmic-ray reconstruction worker instance
+    mutable std::map<unsigned int, unsigned int> m_daughterVolumeIdOffsetMap; ///< Maps original LArTPC volume id -> id offset for merged instances
 
     bool m_fullWidthCRWorkerWireGaps;        ///< Whether wire-type line gaps in cosmic-ray worker instances should cover all drift time
     bool m_passMCParticlesToWorkerInstances; ///< Whether to pass mc particle details (and links to calo hits) to worker instances

@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArControlFlow/StitchingCosmicRayMergingTool.h
+ *  @file   LArContent/LArThreeDReco/LArPfoStitching/StitchingCosmicRayMergingTool.h
  *
  *  @brief  Header file for the stitching cosmic ray merging tool class.
  *
@@ -8,8 +8,8 @@
 #ifndef LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H
 #define LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H 1
 
-#include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
-#include "larpandoracontent/LArControlFlow/StitchingBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingBaseTool.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoStitching/StitchingPfoOperations.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
@@ -29,8 +29,8 @@ public:
      */
     StitchingCosmicRayMergingTool();
 
-    void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap,
-        PfoToFloatMap &stitchedPfosToX0Map);
+    void RunStitching(const pandora::Algorithm *const pAlgorithm, const StitchingPfoOperations *const pStitchingOperations,
+        const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) override;
 
     /**
      *  @brief  PfoAssociation class
@@ -85,16 +85,16 @@ public:
     };
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
     /**
-     *  @brief  Select primary Pfos from the input list of Pfos
+     *  @brief  Select Pfos from the input list of Pfos
      *
      *  @param  pInputPfoList the input list of Pfos
      *  @param  pfoToLArTPCMap the input mapping between Pfos and tpc
      *  @param  outputPfoList the output list of Pfos
      */
-    void SelectPrimaryPfos(const pandora::PfoList *pInputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoList &outputPfoList) const;
+    void SelectPfos(const pandora::PfoList *pInputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoList &outputPfoList) const;
 
     typedef std::unordered_map<const pandora::ParticleFlowObject *, LArPointingCluster> ThreeDPointingClusterMap;
 
@@ -196,8 +196,9 @@ private:
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
      *  @param  stitchedPfosToX0Map a map of cosmic-ray pfos that have been stitched between lar tpcs to the X0 shift
      */
-    void StitchPfos(const MasterAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
-        const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const;
+    void StitchPfos(const pandora::Algorithm *const pAlgorithm, const StitchingPfoOperations *const pStitchingOperations,
+        const ThreeDPointingClusterMap &pointingClusterMap, const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap,
+        PfoToFloatMap &stitchedPfosToX0Map) const;
 
     typedef std::unordered_map<const pandora::ParticleFlowObject *, LArPointingCluster::Vertex> PfoToPointingVertexMap;
     typedef std::unordered_map<const pandora::ParticleFlowObject *, PfoToPointingVertexMap> PfoToPointingVertexMatrix;
@@ -211,9 +212,9 @@ private:
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
      *  @param  pfoToPointingVertexMatrix the map [pfo -> map [matched pfo -> pfo stitching vertex]]
      */
-    void ShiftPfo(const MasterAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfoToShift,
-        const pandora::ParticleFlowObject *const pMatchedPfo, const float x0, const PfoToLArTPCMap &pfoToLArTPCMap,
-        const PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
+    void ShiftPfo(const pandora::Algorithm *const pAlgorithm, const StitchingPfoOperations *const pStitchingOperations,
+        const pandora::ParticleFlowObject *const pPfoToShift, const pandora::ParticleFlowObject *const pMatchedPfo, const float x0,
+        const PfoToLArTPCMap &pfoToLArTPCMap, const PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
 
     /**
      *  @brief  Calculate x0 shift for a group of associated Pfos
@@ -243,6 +244,7 @@ private:
     unsigned int m_minNCaloHits3D;
     float m_maxX0FractionalDeviation; ///< The maximum allowed fractional difference of an X0 contribution for matches to be stitched
     float m_boundaryToleranceWidth;   ///< The distance from the APA/CPA boundary inside which the deviation consideration is ignored
+    bool m_onlyFinalStatePfos;        ///< Select only final state PFOs
 };
 
 } // namespace lar_content

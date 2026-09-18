@@ -55,6 +55,22 @@ void LArEigenHelper::Vectorize(const T &caloHitContainer, Eigen::MatrixXf &centr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+template <class T>
+void LArEigenHelper::Vectorize3D(const T &caloHitContainer, Eigen::MatrixXf &hitMatrix)
+{
+    int i{0};
+    for (const CaloHit *const pCaloHit : caloHitContainer)
+    {
+        const CartesianVector &pos{pCaloHit->GetPositionVector()};
+        hitMatrix(i, 0) = pos.GetX();
+        hitMatrix(i, 1) = pos.GetY();
+        hitMatrix(i, 2) = pos.GetZ();
+        ++i;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArEigenHelper::GetAngles(const Eigen::MatrixXf &hitMatrix, const Eigen::RowVectorXf &origin, Eigen::RowVectorXf &phis)
 {
     const float pi{static_cast<float>(M_PI)};
@@ -72,7 +88,12 @@ void LArEigenHelper::GetAngles(const Eigen::MatrixXf &hitMatrix, const Eigen::Ro
 
 template void LArEigenHelper::Vectorize(const CaloHitList &, Eigen::MatrixXf &);
 template void LArEigenHelper::Vectorize(const CaloHitVector &, Eigen::MatrixXf &);
+template void LArEigenHelper::Vectorize(const CaloHitSet &, Eigen::MatrixXf &);
+template void LArEigenHelper::Vectorize3D(const CaloHitList &, Eigen::MatrixXf &);
+template void LArEigenHelper::Vectorize3D(const CaloHitVector &, Eigen::MatrixXf &);
+template void LArEigenHelper::Vectorize3D(const CaloHitSet &, Eigen::MatrixXf &);
 template void LArEigenHelper::Vectorize(const CaloHitList &, Eigen::MatrixXf &, Eigen::MatrixXf &, Eigen::MatrixXf &);
 template void LArEigenHelper::Vectorize(const CaloHitVector &, Eigen::MatrixXf &, Eigen::MatrixXf &, Eigen::MatrixXf &);
+template void LArEigenHelper::Vectorize(const CaloHitSet &, Eigen::MatrixXf &, Eigen::MatrixXf &, Eigen::MatrixXf &);
 
 } // namespace lar_content

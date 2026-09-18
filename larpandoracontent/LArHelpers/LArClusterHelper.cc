@@ -8,6 +8,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
+#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 #include <Eigen/Dense>
 
@@ -701,6 +702,136 @@ bool LArClusterHelper::HasBlockedPath(const CaloHitVector &caloHits, const CaloH
     }
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArClusterHelper::OrderHitsAlongTrajectory(const Cluster *const pCluster, const TwoDSlidingFitResult &sfr, CaloHitList &orderedHits)
+{
+    CaloHitList clusterHits;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHits);
+
+    if (clusterHits.size() < 3)
+    {
+        orderedHits = clusterHits;
+        return;
+    }
+
+    // Build a KD tree to allow quick identification of hits in the vicinity of a given position along the trajectory
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit *, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> HitKDNode2D;
+    typedef std::vector<HitKDNode2D> HitKDNode2DList;
+
+    float r{2.f};
+    HitKDTree2D kdTree;
+    HitKDNode2DList nodes;
+    KDTreeBox boundingRegion{fill_and_bound_2d_kd_tree(clusterHits, nodes)};
+    kdTree.build(nodes, boundingRegion);
+
+    // We'll compare the size of the number of used hits to the number of hits in the cluster to determine when we're done
+    const size_t nHits(clusterHits.size());
+    CaloHitSet usedHits, prevSeed;
+    // Start with the first hit in the list
+    const CaloHit *pSeedHit{clusterHits.front()};
+    bool seedIdentified{false};
+    // Check that no other hit precedes this in the sliding fit trajectory, and if it does, update the seed hit until we find the true seed
+    while (!seedIdentified)
+    {
+        seedIdentified = true;
+        // Get sliding fit trajectory for the seed
+        const CartesianVector &seedPos{pSeedHit->GetPositionVector()};
+        float rL{0.f}, rT{0.f};
+        CartesianVector fitDir(0, 0, 0);
+        sfr.GetLocalPosition(seedPos, rL, rT);
+        sfr.GetGlobalFitDirection(rL, fitDir);
+
+        for (const CaloHit *pTestHit : clusterHits)
+        {
+            const CartesianVector &testPos{pTestHit->GetPositionVector()};
+            const CartesianVector testDir{testPos - seedPos};
+            const float lPos{testDir.GetDotProduct(fitDir)};
+
+            // Check for upstream hit, and if found, select as new seed and repeat the process
+            if (lPos < 0.f && !prevSeed.count(pTestHit))
+            {
+                prevSeed.insert(pSeedHit);
+                pSeedHit = pTestHit;
+                seedIdentified = false;
+                break;
+            }
+        }
+    }
+    orderedHits.push_back(pSeedHit);
+    usedHits.insert(pSeedHit);
+
+    // Add hits along the trajectory
+    while (usedHits.size() < nHits)
+    {
+        r = 2.f;
+        // Get the local sliding fit trajectory
+        const CartesianVector &seedPos{pSeedHit->GetPositionVector()};
+        float rL{0.f}, rT{0.f};
+        CartesianVector fitDir(0, 0, 0);
+        sfr.GetLocalPosition(seedPos, rL, rT);
+        sfr.GetGlobalFitDirection(rL, fitDir);
+
+        // Find the nearby hits
+        HitKDNode2DList found;
+        bool ok{false};
+        unsigned int nExpansions{0};
+        do
+        {
+            // If we've failed to find usable hits after three expansions, just include all hits
+            if (nExpansions > 2)
+                r = std::numeric_limits<float>::max();
+            KDTreeBox searchRegion(build_2d_kd_search_region(pSeedHit, r, r));
+            kdTree.search(searchRegion, found);
+            // Check if we found something other than the seed
+            if (found.size() < 2)
+            {
+                r *= 2.f;
+                ++nExpansions;
+            }
+            else
+            {
+                for (const auto &node : found)
+                {
+                    const CaloHit *const pTestHit{node.data};
+                    // Ensure our hit region has usable hits
+                    if (!usedHits.count(pTestHit))
+                    {
+                        ok = true;
+                        break;
+                    }
+                }
+                if (!ok)
+                {
+                    found.clear();
+                    r *= 2.f;
+                    ++nExpansions;
+                }
+            }
+        } while (!ok);
+
+        // Find the most upstream unused hit relative to the seed hit, and set this to be the new seed
+        float minLPos(std::numeric_limits<float>::max());
+        for (const auto &node : found)
+        {
+            const CaloHit *const pTestHit{node.data};
+            if (usedHits.count(pTestHit))
+                continue;
+            const CartesianVector &testPos{pTestHit->GetPositionVector()};
+            const CartesianVector testDir{testPos - seedPos};
+            const float lPos{testDir.GetDotProduct(fitDir)};
+            if (lPos < minLPos)
+            {
+                minLPos = lPos;
+                pSeedHit = pTestHit;
+            }
+        }
+        usedHits.insert(pSeedHit);
+        orderedHits.emplace_back(pSeedHit);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
