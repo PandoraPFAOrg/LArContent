@@ -16,8 +16,8 @@ jobs:
     runs-on: ubuntu-24.04
     name: LArContent - Coverity
 
-    # Only run in the PandoraPFA repos.
-    if: github.repository_owner == 'PandoraPFA'
+    # Only run in the PandoraPFAOrg repos.
+    if: github.repository_owner == 'PandoraPFAOrg'
 
     # Defines the build matrix, so what combinatorics of compiler etc. to test.
     strategy:
