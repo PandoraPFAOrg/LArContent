@@ -21,8 +21,8 @@ jobs:
     name: LArContent - clang-format
     runs-on: ubuntu-latest
 
-    # Only run in the PandoraPFA repos.
-    if: github.repository_owner == 'PandoraPFA'
+    # Only run in the PandoraPFAOrg repos.
+    if: github.repository_owner == 'PandoraPFAOrg'
 
     # Build matrix, test both content and DL content.
     strategy:
@@ -38,4 +38,3 @@ jobs:
         with:
           clang-format-version: '18'
           check-path: ${{ matrix.path }}
-
