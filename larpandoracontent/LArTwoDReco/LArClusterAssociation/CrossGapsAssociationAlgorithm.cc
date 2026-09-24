@@ -138,14 +138,14 @@ bool CrossGapsAssociationAlgorithm::AreClustersAssociated(const TwoDSlidingFitRe
         return false;
         
     bool isCrossingTPCCandidate = false;
-    if (m_crossTPCOnClusterDistanceModifier != 0.0f) {
+    if (m_crossTPCOnClusterDistanceModifier != 0.0f || m_crossTPCStepModifier != 0.0f) {
         
         std::set<unsigned int> innerVolIDs;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindLArTPCVolumeIds(innerFitResult, innerVolIDs));
         std::set<unsigned int> outerVolIDs;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->FindLArTPCVolumeIds(outerFitResult, outerVolIDs));
 
-        std::vector<int> sharedClusterVolIDs;
+        std::vector<unsigned int> sharedClusterVolIDs;
     
         std::set_intersection(innerVolIDs.begin(), innerVolIDs.end(),
                           outerVolIDs.begin(), outerVolIDs.end(),
@@ -186,7 +186,7 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
     }
     
     unsigned int crossTPCGapAdditionalSteps = 0;
-    if(isCrossingTPCCandidate and m_crossTPCStepModifier != 0.0f) {
+    if(isCrossingTPCCandidate && m_crossTPCStepModifier != 0.0f) {
         if (startDirection.GetX() > 0.f) {
             crossTPCGapAdditionalSteps = static_cast<unsigned int>(std::round( m_crossTPCStepModifier / std::max(startDirection.GetCosOpeningAngle(CartesianVector(1.f, 0.f, 0.f)), 0.001f)));
         }
@@ -194,7 +194,7 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
         else {
             crossTPCGapAdditionalSteps = static_cast<unsigned int>(std::round( m_crossTPCStepModifier / std::max(startDirection.GetCosOpeningAngle(CartesianVector(1.f, 0.f, 0.f)), 0.001f)));
         }
-        
+        // ATTN hard limit on factor from angle, prevents very large number of steps from angles close to 90 degrees. .001 is appx the cos using width of gap and length of full geometry detector module
     }
     int numGapSteps = 0;
     for (unsigned int iSample = 0; iSample < m_maxSamplingPoints; ++iSample)
