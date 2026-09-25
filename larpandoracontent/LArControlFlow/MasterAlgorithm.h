@@ -328,10 +328,7 @@ protected:
     pandora::StatusCode ReadExternalSettings(const ExternalSteeringParameters *const pExternalParameters,
         const pandora::InputBool inputBool, const pandora::TiXmlHandle xmlHandle, const std::string &xmlTag, bool &outputBool);
 
-    bool m_workerInstancesInitialized; ///< Whether all worker instances have been initialized
-
-    unsigned int m_larCaloHitVersion; ///< The LArCaloHit version for LArCaloHitFactory
-
+    bool m_workerInstancesInitialized;  ///< Whether all worker instances have been initialized
     bool m_shouldRunAllHitsCosmicReco;  ///< Whether to run all hits cosmic-ray reconstruction
     bool m_shouldRunStitching;          ///< Whether to stitch cosmic-ray muons crossing between volumes
     bool m_shouldRunCosmicHitRemoval;   ///< Whether to remove hits from tagged cosmic-rays

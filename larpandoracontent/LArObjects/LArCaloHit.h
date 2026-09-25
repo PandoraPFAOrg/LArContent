@@ -180,7 +180,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  LArCaloHitFactory responsible for object creation
+ *  @brief  LArHitFactory responsible for object creation
  */
 class LArHitFactory : public pandora::ObjectFactory<object_creation::CaloHit::Parameters, object_creation::CaloHit::Object>
 {
@@ -396,13 +396,6 @@ inline void LArOpHit::FillParameters(LArHitParameters &parameters) const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArHitFactory::LArHitFactory(const unsigned int version) :
-    m_version(version)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 inline LArHitFactory::Parameters *LArHitFactory::NewParameters() const
 {
     return new LArHitParameters;
@@ -429,7 +422,7 @@ inline pandora::StatusCode LArHitFactory::Create(const Parameters &parameters, c
             return pandora::STATUS_CODE_SUCCESS;
         }
     }
-    pObject = new LArCaloHit(larCaloHitParameters);
+    pObject = new LArCaloHit(larHitParameters);
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -478,7 +471,7 @@ inline pandora::StatusCode LArHitFactory::Read(Parameters &parameters, const pan
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArCaloHitFactory::Write(const Object *const pObject, pandora::FieldMap &fields) const
+inline pandora::StatusCode LArHitFactory::Write(const Object *const pObject, pandora::FieldMap &fields) const
 {
     // ATTN: To receive this call-back must have already set file writer mc particle factory to this factory
     const pandora::CaloHit *const pCaloHit(dynamic_cast<const pandora::CaloHit *>(pObject));
