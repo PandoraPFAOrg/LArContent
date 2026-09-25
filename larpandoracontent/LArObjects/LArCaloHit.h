@@ -336,9 +336,9 @@ inline void LArCaloHit::SetShowerProbability(const float probability)
 
 inline LArOpHit::LArOpHit(const LArHitParameters &parameters) :
     object_creation::CaloHit::Object(parameters),
-    m_startTime(parameters.m_startTime.Get()),
+    m_channelId(parameters.m_channelId.Get()),
     m_width(parameters.m_width.Get()),
-    m_channelId(parameters.m_channelId.Get())
+    m_startTime(parameters.m_startTime.Get())
 {
 }
 
@@ -422,9 +422,6 @@ inline pandora::StatusCode LArHitFactory::Create(const Parameters &parameters, c
             return pandora::STATUS_CODE_SUCCESS;
         }
     }
-    pObject = new LArCaloHit(larHitParameters);
-
-    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
