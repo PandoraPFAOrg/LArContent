@@ -68,6 +68,15 @@ protected:
 
     typedef std::list<CRCandidate> CRCandidateList;
 
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    float m_face_Xa; ///< Anode      X face
+    float m_face_Xc; ///< Cathode    X face
+    float m_face_Yb; ///< Bottom     Y face
+    float m_face_Yt; ///< Top        Y face
+    float m_face_Zu; ///< Upstream   Z face
+    float m_face_Zd; ///< Downstream Z face
+
 private:
 
     /**
@@ -209,16 +218,6 @@ private:
     float m_minCosmicCosTheta;   ///< The minimum cos(theta) that a Pfo can have to be classified as a likely CR muon
     float m_maxCosmicCurvature;  ///< The maximum curvature that a Pfo can have to be classified as a likely CR muon
 
-protected:
-
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    float m_face_Xa; ///< Anode      X face
-    float m_face_Xc; ///< Cathode    X face
-    float m_face_Yb; ///< Bottom     Y face
-    float m_face_Yt; ///< Top        Y face
-    float m_face_Zu; ///< Upstream   Z face
-    float m_face_Zd; ///< Downstream Z face
 };
 
 } // namespace lar_content
