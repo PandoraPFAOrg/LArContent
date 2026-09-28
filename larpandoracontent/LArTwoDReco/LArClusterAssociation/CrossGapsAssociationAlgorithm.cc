@@ -35,6 +35,7 @@ CrossGapsAssociationAlgorithm::CrossGapsAssociationAlgorithm() :
     m_crossTPCStepModifier(0.0f),
     m_crossTPCOnClusterDistanceModifier(0.0f),
     m_crossTPCBoostStartStep(0.0f),
+    m_crossTPCStartDirectionCosMin(0.01f),
     m_gapTolerance(0.f),
     m_visualize(false)
 {
@@ -188,11 +189,11 @@ bool CrossGapsAssociationAlgorithm::IsAssociated(
     unsigned int crossTPCGapAdditionalSteps = 0;
     if(isCrossingTPCCandidate && m_crossTPCStepModifier != 0.0f) {
         if (startDirection.GetX() > 0.f) {
-            crossTPCGapAdditionalSteps = static_cast<unsigned int>(std::round( m_crossTPCStepModifier / std::max(startDirection.GetCosOpeningAngle(CartesianVector(1.f, 0.f, 0.f)), 0.001f)));
+            crossTPCGapAdditionalSteps = static_cast<unsigned int>(std::round( m_crossTPCStepModifier / std::max(startDirection.GetCosOpeningAngle(CartesianVector(1.f, 0.f, 0.f)), m_crossTPCStartDirectionCosMin)));
         }
         
         else {
-            crossTPCGapAdditionalSteps = static_cast<unsigned int>(std::round( m_crossTPCStepModifier / std::max(startDirection.GetCosOpeningAngle(CartesianVector(1.f, 0.f, 0.f)), 0.001f)));
+            crossTPCGapAdditionalSteps = static_cast<unsigned int>(std::round( m_crossTPCStepModifier / std::max(startDirection.GetCosOpeningAngle(CartesianVector(1.f, 0.f, 0.f)), m_crossTPCStartDirectionCosMin)));
         }
         // ATTN hard limit on factor from angle, prevents very large number of steps from angles close to 90 degrees. .001 is appx the cos using width of gap and length of full geometry detector module
     }
@@ -340,6 +341,9 @@ StatusCode CrossGapsAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHand
         
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CrossTPCBoostStartStep", m_crossTPCBoostStartStep));
+        
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CrossTPCStartDirectionCosMin", m_crossTPCStartDirectionCosMin));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GapTolerance", m_gapTolerance));
     
