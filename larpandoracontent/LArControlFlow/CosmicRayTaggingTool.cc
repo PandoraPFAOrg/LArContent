@@ -21,6 +21,12 @@ namespace lar_content
 {
 
 CosmicRayTaggingTool::CosmicRayTaggingTool() :
+    m_face_Xa(0.f),
+    m_face_Xc(0.f),
+    m_face_Yb(0.f),
+    m_face_Yt(0.f),
+    m_face_Zu(0.f),
+    m_face_Zd(0.f),
     m_cutMode("nominal"),
     m_angularUncertainty(5.f),
     m_positionalUncertainty(3.f),
@@ -32,13 +38,7 @@ CosmicRayTaggingTool::CosmicRayTaggingTool() :
     m_marginZ(10.f),
     m_maxNeutrinoCosTheta(0.2f),
     m_minCosmicCosTheta(0.6f),
-    m_maxCosmicCurvature(0.04f),
-    m_face_Xa(0.f),
-    m_face_Xc(0.f),
-    m_face_Yb(0.f),
-    m_face_Yt(0.f),
-    m_face_Zu(0.f),
-    m_face_Zd(0.f)
+    m_maxCosmicCurvature(0.04f)
 {
 }
 
