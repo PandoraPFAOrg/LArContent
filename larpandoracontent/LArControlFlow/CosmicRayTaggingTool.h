@@ -78,7 +78,6 @@ protected:
     float m_face_Zd; ///< Downstream Z face
 
 private:
-
     /**
      *  @brief  Get the 3D calo hit cluster associated with a given Pfo, and check if it has sufficient hits
      *
@@ -217,7 +216,6 @@ private:
     float m_maxNeutrinoCosTheta; ///< The maximum cos(theta) that a Pfo can have to be classified as a likely neutrino
     float m_minCosmicCosTheta;   ///< The minimum cos(theta) that a Pfo can have to be classified as a likely CR muon
     float m_maxCosmicCurvature;  ///< The maximum curvature that a Pfo can have to be classified as a likely CR muon
-
 };
 
 } // namespace lar_content
