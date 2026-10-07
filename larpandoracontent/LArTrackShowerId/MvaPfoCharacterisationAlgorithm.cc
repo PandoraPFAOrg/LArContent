@@ -27,6 +27,7 @@ MvaPfoCharacterisationAlgorithm<T>::MvaPfoCharacterisationAlgorithm() :
     m_useICARUSCollectionPlane(false),
     m_persistFeatures(false),
     m_trainingSetMode(false),
+    m_cheatingSetMode(false),
     m_testBeamMode(false),
     m_enableProbability(true),
     m_useThreeDInformation(true),
@@ -200,6 +201,71 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             return (pPfo->GetParticleId() == MU_MINUS);
         }
     }
+
+    if (m_cheatingSetMode) 
+    {
+        /* M. Sotgia: This flag enable a "cheating" mode for which the pfp features are computed, and their values 
+         * are saved, but the track score is forced to be the cheated version of himself
+         * 
+         * TODO: make this a LArCheating indipendent module, with less overhead 
+         * 
+        */
+
+        bool isTrueTrack(false);
+        bool isMainMCParticleSet(false);
+
+        std::cout << "** --> DEV : [MvaPfoCharacterisationAlgorithm<T>::IsClearTrack] " 
+                  << "Starting the cheating of the BDT" << std::endl;
+
+        try 
+        {
+            // This define the truth trackScore value for the Pfo: 1 tracks, 0 showers
+            const MCParticle *const pMCParticle(LArMCParticleHelper::GetMainMCParticle(pPfo));
+            isTrueTrack = ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())));
+            isMainMCParticleSet = (pMCParticle->GetParticleId() != 0);
+
+            std::cout << "** --> DEV : [MvaPfoCharacterisationAlgorithm<T>::IsClearTrack] " 
+                      << "The MC particle found is with PID = " << pMCParticle->GetParticleId()
+                      << ", PHOTON == " << PHOTON 
+                      << ", E_MINUS == " << E_MINUS
+                      << ", assigned TrackScore == " << static_cast<int>(isTrueTrack)
+                      << " (" << (isTrueTrack ? "track" : "shower") << ")"
+                      << std::endl;
+        }
+        catch (const StatusCodeException &)
+        {
+        }
+
+        if (isMainMCParticleSet)
+        {
+            // I found a MC particle (the main MC particle is set) so I can return the correct value
+            // SIDE NOTE: if this association do not happen, the track score is not present in the pfp metadata, 
+            // so CAFAna will assign a default value of -5
+
+            object_creation::ParticleFlowObject::Metadata metadata;
+            const double score = static_cast<int>(isTrueTrack);
+            metadata.m_propertiesToAdd["TrackScore"] = score;
+
+            std::cout << "** --> DEV : [MvaPfoCharacterisationAlgorithm<T>::IsClearTrack] " 
+                      << "score == " << score 
+                      << std::endl;
+
+            if (m_persistFeatures)
+            {
+                for (auto const &[name, value] : featureMap)
+                {
+                    metadata.m_propertiesToAdd[name] = value.Get();
+                    std::cout << "** --> DEV : [MvaPfoCharacterisationAlgorithm<T>::IsClearTrack] " 
+                      << "addinng property : " << name << " with value " << value.Get()
+                      << std::endl;
+                }
+            }
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+            return (m_minProbabilityCut <= score);
+        }
+
+        return isTrueTrack;
+    } // m_cheatingSetMode == true
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
@@ -399,6 +465,8 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingSetMode", m_trainingSetMode));
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CheatingSetMode", m_cheatingSetMode));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCaloHitsCut", m_minCaloHitsCut));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
@@ -439,7 +507,7 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinProbabilityCut", m_minProbabilityCut));
 
-    if (m_trainingSetMode)
+    if (m_trainingSetMode || m_cheatingSetMode)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
