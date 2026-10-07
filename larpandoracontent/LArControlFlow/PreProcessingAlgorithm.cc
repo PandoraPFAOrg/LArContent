@@ -81,8 +81,6 @@ void PreProcessingAlgorithm::ProcessCaloHits()
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCaloHitListName, pCaloHitList));
 
-    std::cout << "Input name '" << m_inputCaloHitListName << "' with " << pCaloHitList->size() << " hits" << std::endl;
-
     if (pCaloHitList->empty())
         return;
 
@@ -128,8 +126,6 @@ void PreProcessingAlgorithm::ProcessCaloHits()
     filteredInputList.insert(filteredInputList.end(), filteredCaloHitListU.begin(), filteredCaloHitListU.end());
     filteredInputList.insert(filteredInputList.end(), filteredCaloHitListV.begin(), filteredCaloHitListV.end());
     filteredInputList.insert(filteredInputList.end(), filteredCaloHitListW.begin(), filteredCaloHitListW.end());
-
-    std::cout << "Saw " << selectedCaloHitListOp.size() << " optical hits." << std::endl;
 
     if (!filteredInputList.empty() && !m_filteredCaloHitListName.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredInputList, m_filteredCaloHitListName));
