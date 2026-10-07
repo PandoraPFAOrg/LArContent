@@ -375,6 +375,14 @@ public:
     static bool SortByPosition(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
     /**
+     *  @brief  Sort clusters by inner position 
+     *
+     *  @param  pLhs address of first cluster
+     *  @param  pRhs address of second cluster
+     */
+    static bool SortByInnerPosition(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    /**
      *  @brief  Sort clusters by pulse-height
      *
      *  @param  pLhs address of first cluster

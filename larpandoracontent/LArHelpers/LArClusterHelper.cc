@@ -905,6 +905,20 @@ bool LArClusterHelper::SortByPosition(const Cluster *const pLhs, const Cluster *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArClusterHelper::SortByInnerPosition(const Cluster *const pLhs, const Cluster *const pRhs)
+{
+    CartesianVector lhsInnerCoordinate(0.f, 0.f, 0.f); 
+    CartesianVector rhsInnerCoordinate(0.f, 0.f, 0.f);
+    CartesianVector unused(0.f, 0.f, 0.f);
+
+    LArClusterHelper::GetExtremalCoordinates(pLhs, lhsInnerCoordinate, unused);
+    LArClusterHelper::GetExtremalCoordinates(pRhs, rhsInnerCoordinate, unused);
+
+    return LArClusterHelper::SortCoordinatesByPosition(lhsInnerCoordinate, rhsInnerCoordinate);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArClusterHelper::SortByPulseHeight(const Cluster *const pLhs, const Cluster *const pRhs)
 {
     return (pLhs->GetHadronicEnergy() > pRhs->GetHadronicEnergy());
