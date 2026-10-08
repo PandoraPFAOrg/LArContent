@@ -96,9 +96,7 @@ void PreProcessingAlgorithm::ProcessCaloHits()
 
         switch (pCaloHit->GetHitType())
         {
-            case OPTICAL_TPC:
-            case OPTICAL_TRAP:
-            case OPTICAL_SIPM:
+            case OPTICAL:
                 this->ProcessOpticalHit(pCaloHit, selectedCaloHitListOp);
                 break;
             case TPC_VIEW_U:
@@ -113,7 +111,6 @@ void PreProcessingAlgorithm::ProcessCaloHits()
             default:
                 break;
         }
-
     }
 
     CaloHitList filteredCaloHitListU, filteredCaloHitListV, filteredCaloHitListW, filteredCaloHitListOp;

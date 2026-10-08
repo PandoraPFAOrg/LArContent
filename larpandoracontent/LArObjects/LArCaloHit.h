@@ -409,9 +409,7 @@ inline pandora::StatusCode LArHitFactory::Create(const Parameters &parameters, c
 
     switch (parameters.m_hitType.Get())
     {
-        case pandora::OPTICAL_SIPM:
-        case pandora::OPTICAL_TRAP:
-        case pandora::OPTICAL_TPC:
+        case pandora::OPTICAL:
         {
             pObject = new LArOpHit(larHitParameters);
             return pandora::STATUS_CODE_SUCCESS;
@@ -430,9 +428,7 @@ inline pandora::StatusCode LArHitFactory::Read(Parameters &parameters, const pan
 {
     switch (parameters.m_hitType.Get())
     {
-        case pandora::OPTICAL_SIPM:
-        case pandora::OPTICAL_TRAP:
-        case pandora::OPTICAL_TPC:
+        case pandora::OPTICAL:
         {
             LArHitParameters &p(dynamic_cast<LArHitParameters &>(parameters));
             p.m_channelId = fields.GetOrDefault<unsigned int>("opticalChannelId", 0u);
@@ -477,9 +473,7 @@ inline pandora::StatusCode LArHitFactory::Write(const Object *const pObject, pan
 
     switch (pCaloHit->GetHitType())
     {
-        case pandora::OPTICAL_SIPM:
-        case pandora::OPTICAL_TRAP:
-        case pandora::OPTICAL_TPC:
+        case pandora::OPTICAL:
         {
             const LArOpHit *const pLArOpHit(dynamic_cast<const LArOpHit *>(pObject));
 

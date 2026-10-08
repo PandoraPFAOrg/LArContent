@@ -279,7 +279,7 @@ StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volume
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         const HitType hitType(pCaloHit->GetHitType());
-        if ((OPTICAL_SIPM == hitType) || (OPTICAL_TRAP == hitType) || (OPTICAL_TPC == hitType))
+        if (OPTICAL == hitType)
             continue;
 
         const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
@@ -316,7 +316,7 @@ StatusCode MasterAlgorithm::GetOpticalHitList(CaloHitList &opticalHitList) const
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         const HitType hitType(pCaloHit->GetHitType());
-        if ((OPTICAL_SIPM == hitType) || (OPTICAL_TRAP == hitType) || (OPTICAL_TPC == hitType))
+        if (OPTICAL == hitType)
             opticalHitList.push_back(pCaloHit);
     }
 
@@ -574,7 +574,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
         for (const CaloHit *const pSliceCaloHit : sliceHits)
         {
             const HitType hitType(pSliceCaloHit->GetHitType());
-            const bool isOpticalHit((OPTICAL_SIPM == hitType) || (OPTICAL_TRAP == hitType) || (OPTICAL_TPC == hitType));
+            const bool isOpticalHit(hitType == OPTICAL);
             // ATTN Must ensure we copy the hit actually owned by master instance; access differs with/without slicing enabled
             // ATTN Optical hits are always master-owned regardless of slicing mode (for now).
             const CaloHit *const pCaloHitInMaster((m_shouldRunSlicing && !isOpticalHit) ?
@@ -690,9 +690,7 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
 {
     switch (pCaloHit->GetHitType())
     {
-        case OPTICAL_SIPM:
-        case OPTICAL_TRAP:
-        case OPTICAL_TPC:
+        case OPTICAL:
         {
             const LArOpHit *const pLArOpHit{dynamic_cast<const LArOpHit *>(pCaloHit)};
             if (!pLArOpHit)
