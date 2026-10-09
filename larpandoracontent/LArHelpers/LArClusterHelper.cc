@@ -363,7 +363,8 @@ void LArClusterHelper::GetClosestPositions(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetClusterBoundingBox(const Cluster *const pCluster, CartesianVector &minimumCoordinate, CartesianVector &maximumCoordinate)
+void LArClusterHelper::GetClusterBoundingBox(const Cluster *const pCluster, CartesianVector &minimumCoordinate, CartesianVector &maximumCoordinate,
+    bool useHitWidth)
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
@@ -380,8 +381,9 @@ void LArClusterHelper::GetClusterBoundingBox(const Cluster *const pCluster, Cart
         {
             const CaloHit *const pCaloHit = *hIter;
             const CartesianVector &hit(pCaloHit->GetPositionVector());
-            xmin = std::min(hit.GetX(), xmin);
-            xmax = std::max(hit.GetX(), xmax);
+            const float halfWidth = useHitWidth ? 0.5f * pCaloHit->GetCellSize1() : 0.f;
+            xmin = std::min(hit.GetX() - halfWidth, xmin);
+            xmax = std::max(hit.GetX() + halfWidth, xmax);
             ymin = std::min(hit.GetY(), ymin);
             ymax = std::max(hit.GetY(), ymax);
             zmin = std::min(hit.GetZ(), zmin);

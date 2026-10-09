@@ -5,6 +5,7 @@ set(LAR_DL_CONTENT_SRCS
     larpandoradlcontent/LArEventClassification/CNNTrackShowerCountingAlgorithm.cc
     larpandoradlcontent/LArHelpers/LArCanvasHelper.cc
     larpandoradlcontent/LArHelpers/LArDLHelper.cc
+    larpandoradlcontent/LArHelpers/LArDLShowerHelper.cc
     larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.cc
     larpandoradlcontent/LArObjects/VertexTuple.cc
     larpandoradlcontent/LArShowerGrowing/DLTwoDShowerGrowingAlgorithm.cc
@@ -13,6 +14,11 @@ set(LAR_DL_CONTENT_SRCS
     larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.cc
     larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.cc
     larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.cc
+    larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLMultiViewMatchingAlgorithm.cc
+    larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLThreeViewClearShowersTool.cc
+    larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLThreeViewMergeAndCreateShowersTool.cc
+    larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLTwoViewClearShowersTool.cc
+    larpandoradlcontent/LArThreeDReco/LArShowerMatching/DLTwoViewMergeAndCreateShowersTool.cc
     larpandoradlcontent/LArTrackShowerId/DlClusterCharacterisationAlgorithm.cc
     larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.cc
     larpandoradlcontent/LArTrackShowerId/DlPfoCharacterisationAlgorithm.cc
