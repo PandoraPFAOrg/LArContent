@@ -11,7 +11,6 @@
 #include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-#include "larpandoracontent/LArUtility/RollUp.h"
 
 namespace lar_content
 {
@@ -63,7 +62,6 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string m_caloHitListName;  ///< Name of input list containing all 2D hits
-    RollUpper m_rollUp;             ///< Roll-up object to determine the main contributing MC particle for each hit
 };
 
 } // namespace lar_content

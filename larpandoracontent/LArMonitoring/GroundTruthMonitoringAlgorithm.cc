@@ -8,10 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "Helpers/MCParticleHelper.h"
+
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 #include "larpandoracontent/LArMonitoring/GroundTruthMonitoringAlgorithm.h"
-#include "larpandoracontent/LArUtility/RollUp.h"
 
 using namespace pandora;
 
@@ -37,7 +38,6 @@ StatusCode GroundTruthMonitoringAlgorithm::Run()
         {TPC_VIEW_U, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_U)},
         {TPC_VIEW_V, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_V)},
         {TPC_VIEW_W, LArGeometryHelper::GetWirePitch(this->GetPandora(), TPC_VIEW_W)}};
-    m_rollUp = RollUpper(std::make_unique<RollUpEMAndAmbiguousDeltaRayHitsPolicy>(0, lengthThresholds));
 
     CaloHitList uHits, vHits, wHits;
     this->PartitionViews(*pCaloHitList, uHits, vHits, wHits);
@@ -59,7 +59,7 @@ void GroundTruthMonitoringAlgorithm::MakeMCToHitsMap(const CaloHitList &caloHitL
     {
         try
         {
-            const MCParticle *pMC{m_rollUp.RollUpCaloHit(pCaloHit)};
+            const MCParticle *pMC{MCParticleHelper::GetMainMCParticle(pCaloHit)};
             if (!pMC)
                 continue;
             mcMap[pMC].emplace_back(pCaloHit);
