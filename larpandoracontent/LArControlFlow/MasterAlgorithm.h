@@ -100,9 +100,18 @@ protected:
     pandora::StatusCode InitializeWorkerInstances();
 
     /**
-     *  @brief  Copy mc particles in the named input list to all pandora worker instances
+     *  @brief  Copy mc particles in the named input list to the given pandora instances.
+     *
+     *  @param  instances the list of pandora instances to which the mc particles should be copied
      */
-    pandora::StatusCode CopyMCParticles() const;
+    pandora::StatusCode CopyMCParticles(PandoraInstanceList *instances = nullptr) const;
+
+    /**
+     *  @brief  Copy mc particles in the named input list to the given pandora instance.
+     *
+     *  @param  instance the pandora instance to which the mc particles should be copied
+     */
+    pandora::StatusCode CopyMCParticles(const pandora::Pandora* instance) const;
 
     /**
      *  @brief  Get the mapping from lar tpc volume id to lists of all hits, and truncated hits

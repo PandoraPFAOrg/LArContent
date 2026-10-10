@@ -539,7 +539,7 @@ float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float 
         const LineGap *const pLineGap = dynamic_cast<const LineGap *>(pDetectorGap);
 
         if (!pLineGap)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+            continue;
 
         const LineGapType lineGapType(pLineGap->GetLineGapType());
 
