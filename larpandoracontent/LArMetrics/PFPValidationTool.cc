@@ -174,12 +174,12 @@ void PFPValidationTool::GetRecoParticleInfo(const MCParticle *const pMCTarget, c
         pfpTreeVars.m_recoVertexZ.push_back(pRecoVertex->GetPosition().GetZ());
 
         // Signed vertexAcc
-        const CartesianVector &trueVertex((pMCTarget->GetParticleId() == 22) ? pMCTarget->GetEndpoint() : pMCTarget->GetVertex());
+        const CartesianVector &trueVertex((pMCTarget->GetParticleId() == PHOTON) ? pMCTarget->GetEndpoint() : pMCTarget->GetVertex());
         const float vertexAcc((pRecoVertex->GetPosition() - trueVertex).GetMagnitude());
-        const float sign(
-            (vertexAcc < std::numeric_limits<float>::epsilon() || pMCTarget->GetMomentum().GetMagnitude() < std::numeric_limits<float>::epsilon()) ? 1.f
-                : (pRecoVertex->GetPosition() - trueVertex).GetOpeningAngle(pMCTarget->GetMomentum()) < (M_PI * 0.5) ? 1.f
-                                                                                                                     : -1.f);
+        const float sqrtEpsilon(std::sqrt(std::numeric_limits<float>::epsilon()));
+        const float sign((vertexAcc < sqrtEpsilon || pMCTarget->GetMomentum().GetMagnitude() < sqrtEpsilon) ? 1.f
+            : (pRecoVertex->GetPosition() - trueVertex).GetOpeningAngle(pMCTarget->GetMomentum()) < (M_PI * 0.5) ? 1.f
+            : -1.f);
         pfpTreeVars.m_vertexAcc.push_back(vertexAcc * sign);
 
         try
