@@ -861,7 +861,7 @@ StatusCode EventClusterValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", caloHitListNames));
     if (!caloHitListNames.empty())
     {
-        m_caloHitListNames = caloHitListNames;
+        m_caloHitListNames = std::move(caloHitListNames);
     }
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ClusterListNames", m_clusterListNames));
 

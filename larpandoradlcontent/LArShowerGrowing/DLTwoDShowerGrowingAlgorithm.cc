@@ -788,7 +788,7 @@ StatusCode DLTwoDShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     for (const DetectorGap *const pDetectorGap : this->GetPandora().GetGeometry()->GetDetectorGapList())
     {
         const LineGap *const pLineGap = dynamic_cast<const LineGap *>(pDetectorGap);
-        if (pLineGap->GetLineGapType() == TPC_DRIFT_GAP)
+        if (pLineGap && pLineGap->GetLineGapType() == TPC_DRIFT_GAP)
         {
             m_detectorXGaps.insert(static_cast<double>(pLineGap->GetLineStartX()));
             m_detectorXGaps.insert(static_cast<double>(pLineGap->GetLineEndX()));
