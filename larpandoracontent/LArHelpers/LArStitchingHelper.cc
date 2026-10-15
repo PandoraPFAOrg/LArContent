@@ -175,34 +175,6 @@ float LArStitchingHelper::GetTPCDisplacement(const LArTPC &firstTPC, const LArTP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-// Pair of vertices of two pointing clusters that are closest in the y-z plane (no x information used)
-static void GetClosestVerticesInYZ(const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2,
-    LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2)
-{
-    const LArPointingCluster::Vertex *const vertices1[2] = {&pointingCluster1.GetInnerVertex(), &pointingCluster1.GetOuterVertex()};
-    const LArPointingCluster::Vertex *const vertices2[2] = {&pointingCluster2.GetInnerVertex(), &pointingCluster2.GetOuterVertex()};
-    float bestDrSquared(std::numeric_limits<float>::max());
-
-    for (const LArPointingCluster::Vertex *const pVertex1 : vertices1)
-    {
-        for (const LArPointingCluster::Vertex *const pVertex2 : vertices2)
-        {
-            const float dy(pVertex1->GetPosition().GetY() - pVertex2->GetPosition().GetY());
-            const float dz(pVertex1->GetPosition().GetZ() - pVertex2->GetPosition().GetZ());
-            const float drSquared(dy * dy + dz * dz);
-
-            if (drSquared < bestDrSquared)
-            {
-                bestDrSquared = drSquared;
-                closestVertex1 = *pVertex1;
-                closestVertex2 = *pVertex2;
-            }
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC &larTPC2, const LArPointingCluster &pointingCluster1,
     const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2)
 {
@@ -249,11 +221,38 @@ void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC 
     const float dzFarFar(farVertex1.GetPosition().GetZ() - farVertex2.GetPosition().GetZ());
     const float drFarFarSquared(dxFarFar * dxFarFar + dyFarFar * dyFarFar + dzFarFar * dzFarFar);
 
+    // ATTN: another pair of vertices is closer than the near vertices chosen from the x extents, which happens when those x extents
+    // are unreliable for clusters nearly parallel to the boundary; fall back to the pair of vertices closest in the y-z plane
     if (drNearNearSquared > std::min(drFarFarSquared, std::min(drNearFarSquared, drFarNearSquared)))
         return GetClosestVerticesInYZ(pointingCluster1, pointingCluster2, closestVertex1, closestVertex2);
 
     closestVertex1 = nearVertex1;
     closestVertex2 = nearVertex2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArStitchingHelper::GetClosestVerticesInYZ(const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2,
+    LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2)
+{
+    float bestDrSquared(std::numeric_limits<float>::max());
+
+    for (const LArPointingCluster::Vertex *const pVertex1 : {&pointingCluster1.GetInnerVertex(), &pointingCluster1.GetOuterVertex()})
+    {
+        for (const LArPointingCluster::Vertex *const pVertex2 : {&pointingCluster2.GetInnerVertex(), &pointingCluster2.GetOuterVertex()})
+        {
+            const float dy(pVertex1->GetPosition().GetY() - pVertex2->GetPosition().GetY());
+            const float dz(pVertex1->GetPosition().GetZ() - pVertex2->GetPosition().GetZ());
+            const float drSquared(dy * dy + dz * dz);
+
+            if (drSquared < bestDrSquared)
+            {
+                bestDrSquared = drSquared;
+                closestVertex1 = *pVertex1;
+                closestVertex2 = *pVertex2;
+            }
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -109,6 +109,17 @@ public:
         const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2);
 
     /**
+     *  @brief  Given a pair of pointing clusters, find the pair of vertices with smallest yz-separation, using no x information
+     *
+     *  @param  pointingCluster1 the first pointing cluster
+     *  @param  pointingCluster2 the second pointing cluster
+     *  @param  closestVertex1 to receive the relevant vertex from the first pointing cluster
+     *  @param  closestVertex2 to receive the relevant vertex from the second pointing cluster
+     */
+    static void GetClosestVerticesInYZ(const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2,
+        LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2);
+
+    /**
      *  @brief  Calculate X0 for a pair of vertices
      *
      *  @param  firstTPC the first tpc
