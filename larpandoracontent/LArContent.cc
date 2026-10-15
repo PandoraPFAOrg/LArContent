@@ -75,11 +75,9 @@
 #include "larpandoracontent/LArPersistency/EventWritingAlgorithm.h"
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
-#include "larpandoracontent/LArReclustering/CheatedThreeDClusteringTool.h"
 #include "larpandoracontent/LArReclustering/LArExample/RandomClusteringAlgorithm.h"
 #include "larpandoracontent/LArReclustering/LArExample/RandomFigureOfMeritTool.h"
 #include "larpandoracontent/LArReclustering/ShortTrackReclusteringAlgorithm.h"
-#include "larpandoracontent/LArReclustering/SimplePCAThreeDClusteringTool.h"
 
 #include "larpandoracontent/LArShowerRefinement/ConnectionPathwayFeatureTool.h"
 #include "larpandoracontent/LArShowerRefinement/ElectronInitialRegionRefinementAlgorithm.h"
@@ -236,7 +234,6 @@
 #include "larpandoracontent/LArUtility/PfoHitCleaningAlgorithm.h"
 
 #include "larpandoracontent/LArReclustering/ThreeDMultiReclusteringAlgorithm.h"
-#include "larpandoracontent/LArReclustering/ThreeDReclusteringAlgorithm.h"
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
@@ -361,7 +358,6 @@
     d("LArPfoHitCleaning",                      PfoHitCleaningAlgorithm)                                                        \
     d("LArPfoStitching",                        PfoStitchingAlgorithm)                                                          \
     d("LArListPruning",                         ListPruningAlgorithm)                                                           \
-    d("LArThreeDReclustering",                  ThreeDReclusteringAlgorithm)                                                    \
     d("LArThreeDMultiReclustering",             ThreeDMultiReclusteringAlgorithm)                                               \
     d("LArRandomClustering",                    RandomClusteringAlgorithm)                                                      \
     d("LArShortTrackReclustering",              ShortTrackReclusteringAlgorithm)                                                \
@@ -379,8 +375,6 @@
     d("LArTrackValidationTool",                 TrackValidationTool)                                                            \
     d("LArPFPValidationTool",                   PFPValidationTool)                                                              \
     d("LArRandomFigureOfMeritTool",             RandomFigureOfMeritTool)                                                        \
-    d("LArCheatedThreeDClusteringTool",         CheatedThreeDClusteringTool)                                                    \
-    d("LArSimplePCAThreeDClusteringTool",       SimplePCAThreeDClusteringTool)                                                  \
     d("LArConnectionRegionFeatureTool",         ConnectionRegionFeatureTool)                                                    \
     d("LArShowerRegionFeatureTool",             ShowerRegionFeatureTool)                                                        \
     d("LArAmbiguousRegionFeatureTool",          AmbiguousRegionFeatureTool)                                                     \
