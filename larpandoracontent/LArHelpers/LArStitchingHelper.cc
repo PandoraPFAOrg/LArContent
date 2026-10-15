@@ -189,7 +189,10 @@ void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC 
     // ATTN: the near vertices below come from the sign of each cluster's x extent, which is unreliable for clusters nearly
     // parallel to the boundary; where that choice fails, fall back to the pair of vertices closest in the y-z plane
     if (std::fabs(dx1) < std::numeric_limits<float>::epsilon() || std::fabs(dx2) < std::numeric_limits<float>::epsilon())
-        return GetClosestVerticesInYZ(pointingCluster1, pointingCluster2, closestVertex1, closestVertex2);
+    {
+        GetClosestVerticesInYZ(pointingCluster1, pointingCluster2, closestVertex1, closestVertex2);
+        return;
+    }
 
     const bool useInner1((dxVolume > 0.f) == (dx1 < 0.f)); // xVol1 - OUTER - INNER - | - xVol2  [xVol2-xVol1>0; xOuter1-xInner1<0]
     const bool useInner2((dxVolume > 0.f) == (dx2 > 0.f)); // xVol1 - | - INNER - OUTER - xVol2  [xVol2-xVol1>0; xOuter2-xInner2>0]
@@ -224,7 +227,10 @@ void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC 
     // ATTN: another pair of vertices is closer than the near vertices chosen from the x extents, which happens when those x extents
     // are unreliable for clusters nearly parallel to the boundary; fall back to the pair of vertices closest in the y-z plane
     if (drNearNearSquared > std::min(drFarFarSquared, std::min(drNearFarSquared, drFarNearSquared)))
-        return GetClosestVerticesInYZ(pointingCluster1, pointingCluster2, closestVertex1, closestVertex2);
+    {
+        GetClosestVerticesInYZ(pointingCluster1, pointingCluster2, closestVertex1, closestVertex2);
+        return;
+    }
 
     closestVertex1 = nearVertex1;
     closestVertex2 = nearVertex2;
