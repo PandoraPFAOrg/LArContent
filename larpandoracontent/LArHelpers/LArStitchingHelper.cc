@@ -253,6 +253,9 @@ void LArStitchingHelper::GetClosestVerticesInYZ(const LArPointingCluster &pointi
             }
         }
     }
+
+    if (std::numeric_limits<float>::max() == bestDrSquared)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
