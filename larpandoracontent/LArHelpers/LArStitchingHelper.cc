@@ -176,7 +176,8 @@ float LArStitchingHelper::GetTPCDisplacement(const LArTPC &firstTPC, const LArTP
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC &larTPC2, const LArPointingCluster &pointingCluster1,
-    const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2)
+    const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2,
+    const bool useYZFallback)
 {
     if (&larTPC1 == &larTPC2)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -187,9 +188,12 @@ void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC 
     const float dx2(pointingCluster2.GetOuterVertex().GetPosition().GetX() - pointingCluster2.GetInnerVertex().GetPosition().GetX());
 
     // ATTN: the near vertices below come from the sign of each cluster's x extent, which is unreliable for clusters nearly
-    // parallel to the boundary; where that choice fails, fall back to the pair of vertices closest in the y-z plane
+    // parallel to the boundary; if requested, where that choice fails, fall back to the pair of vertices closest in the y-z plane
     if (std::fabs(dx1) < std::numeric_limits<float>::epsilon() || std::fabs(dx2) < std::numeric_limits<float>::epsilon())
     {
+        if (!useYZFallback)
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
         GetClosestVerticesInYZ(pointingCluster1, pointingCluster2, closestVertex1, closestVertex2);
         return;
     }
@@ -225,9 +229,12 @@ void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC 
     const float drFarFarSquared(dxFarFar * dxFarFar + dyFarFar * dyFarFar + dzFarFar * dzFarFar);
 
     // ATTN: another pair of vertices is closer than the near vertices chosen from the x extents, which happens when those x extents
-    // are unreliable for clusters nearly parallel to the boundary; fall back to the pair of vertices closest in the y-z plane
+    // are unreliable for clusters nearly parallel to the boundary; if requested, fall back to the pair of vertices closest in the y-z plane
     if (drNearNearSquared > std::min(drFarFarSquared, std::min(drNearFarSquared, drFarNearSquared)))
     {
+        if (!useYZFallback)
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
         GetClosestVerticesInYZ(pointingCluster1, pointingCluster2, closestVertex1, closestVertex2);
         return;
     }

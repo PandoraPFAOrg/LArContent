@@ -104,9 +104,12 @@ public:
      *  @param  pointingCluster2 the pointing cluster in the second tpc
      *  @param  closestVertex1 to receive the relevant vertex from the first pointing cluster
      *  @param  closestVertex2 to receive the relevant vertex from the second pointing cluster
+     *  @param  useYZFallback whether to fall back to the pair of vertices closest in the yz-plane (see GetClosestVerticesInYZ) where the
+     *          choice based on the x extents of the pointing clusters fails, rather than throwing STATUS_CODE_NOT_FOUND
      */
-    static void GetClosestVertices(const pandora::LArTPC &larTPC1, const pandora::LArTPC &larTPC2, const LArPointingCluster &pointingCluster1,
-        const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2);
+    static void GetClosestVertices(const pandora::LArTPC &larTPC1, const pandora::LArTPC &larTPC2,
+        const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1,
+        LArPointingCluster::Vertex &closestVertex2, const bool useYZFallback = false);
 
     /**
      *  @brief  Given a pair of pointing clusters, find the pair of vertices with smallest yz-separation, using no x information

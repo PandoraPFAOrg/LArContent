@@ -26,6 +26,7 @@ namespace lar_content
 StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_useXcoordinate(false),
     m_alwaysApplyT0Calculation(true),
+    m_useYZFallbackForClosestVertices(false),
     m_halfWindowLayers(30),
     m_minLengthSquared(50.f),
     m_minCosRelativeAngle(0.966),
@@ -217,7 +218,8 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
 
     try
     {
-        LArStitchingHelper::GetClosestVertices(larTPC1, larTPC2, pointingCluster1, pointingCluster2, pointingVertex1, pointingVertex2);
+        LArStitchingHelper::GetClosestVertices(
+            larTPC1, larTPC2, pointingCluster1, pointingCluster2, pointingVertex1, pointingVertex2, m_useYZFallbackForClosestVertices);
     }
     catch (const pandora::StatusCodeException &)
     {
@@ -524,7 +526,8 @@ void StitchingCosmicRayMergingTool::OrderPfoMerges(const PfoToLArTPCMap &pfoToLA
                     pVertexPfo = nullptr;
 
                     LArPointingCluster::Vertex nearVertex1, nearVertex2;
-                    LArStitchingHelper::GetClosestVertices(*pLArTPC1, *pLArTPC2, pointingCluster1, pointingCluster2, nearVertex1, nearVertex2);
+                    LArStitchingHelper::GetClosestVertices(*pLArTPC1, *pLArTPC2, pointingCluster1, pointingCluster2, nearVertex1,
+                        nearVertex2, m_useYZFallbackForClosestVertices);
 
                     const LArPointingCluster::Vertex &farVertex1(
                         nearVertex1.IsInnerVertex() ? pointingCluster1.GetOuterVertex() : pointingCluster1.GetInnerVertex());
@@ -725,7 +728,8 @@ bool StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
             LArPointingCluster::Vertex pointingVertex1, pointingVertex2;
             try
             {
-                LArStitchingHelper::GetClosestVertices(*pLArTPC1, *pLArTPC2, pointingCluster1, pointingCluster2, pointingVertex1, pointingVertex2);
+                LArStitchingHelper::GetClosestVertices(*pLArTPC1, *pLArTPC2, pointingCluster1, pointingCluster2, pointingVertex1,
+                    pointingVertex2, m_useYZFallbackForClosestVertices);
 
                 // Record pfo1 stitching vertex for pfo1<->pfo2 match, used to determine shifting direction in later step
                 const PfoToPointingVertexMatrix::iterator pfoToPointingVertexMatrixIter1(pfoToPointingVertexMatrix.find(pPfo1));
@@ -852,6 +856,9 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "AlwaysApplyT0Calculation", m_alwaysApplyT0Calculation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UseYZFallbackForClosestVertices", m_useYZFallbackForClosestVertices));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HalfWindowLayers", m_halfWindowLayers));
