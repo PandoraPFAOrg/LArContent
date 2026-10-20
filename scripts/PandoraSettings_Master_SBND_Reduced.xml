@@ -13,6 +13,11 @@
         <CurrentCaloHitListReplacement>CaloHitList2D</CurrentCaloHitListReplacement>
     </algorithm>
 
+    <algorithm type = "LArVisualMonitoring">
+        <CaloHitListNames>CaloHitListU CaloHitListV CaloHitListW</CaloHitListNames>
+        <ShowDetector>true</ShowDetector>
+    </algorithm>
+
     <algorithm type = "LArMaster">
         <CRSettingsFile>PandoraSettings_Cosmic_SBND.xml</CRSettingsFile>
         <NuSettingsFile>PandoraSettings_Neutrino_SBND_Reduced.xml</NuSettingsFile>

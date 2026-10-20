@@ -32,4 +32,9 @@
         <ClusterListNames>ClustersW</ClusterListNames>
         <ShowDetector>false</ShowDetector>
     </algorithm>
+
+    <algorithm type = "LArPostProcessing">
+        <CaloHitListNames>CaloHitListU CaloHitListV CaloHitListW CaloHitList2D</CaloHitListNames>
+        <ClusterListNames>ClustersW</ClusterListNames>
+    </algorithm>
 </pandora>
