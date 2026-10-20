@@ -76,7 +76,7 @@ StatusCode ThreeDMultiReclusteringAlgorithm::Run()
         if (reclusterFom > bestReclusterFom)
         {
             bestReclusterFom = reclusterFom;
-            bestReclusterListName = reclusterListName;
+            bestReclusterListName = std::move(reclusterListName);
             bestReclusterList = *pReclusterList;
         }
     }

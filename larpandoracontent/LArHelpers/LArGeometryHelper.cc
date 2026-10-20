@@ -539,7 +539,7 @@ float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float 
         const LineGap *const pLineGap = dynamic_cast<const LineGap *>(pDetectorGap);
 
         if (!pLineGap)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+            continue;
 
         const LineGapType lineGapType(pLineGap->GetLineGapType());
 
@@ -616,6 +616,25 @@ LArGeometryHelper::DetectorBoundaries LArGeometryHelper::GetDetectorBoundaries(c
     }
 
     return detectorBoundaries;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArGeometryHelper::GetDetectorXGaps(const Pandora &pandora, std::set<float> &detXGaps)
+{
+    for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
+    {
+        const LineGap *const pLineGap(dynamic_cast<const LineGap *>(pDetectorGap));
+
+        if (!pLineGap)
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        if (pLineGap->GetLineGapType() == TPC_DRIFT_GAP)
+        {
+            detXGaps.insert(pLineGap->GetLineStartX());
+            detXGaps.insert(pLineGap->GetLineEndX());
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -4,5 +4,7 @@ include(CMakeFindDependencyMacro)
 find_dependency(LArContent 05.01.00 REQUIRED)
 find_dependency(TBB QUIET)
 find_dependency(Torch REQUIRED)
+find_dependency(TorchScatter REQUIRED)
+find_dependency(TorchCluster REQUIRED)
 
 include("${CMAKE_CURRENT_LIST_DIR}/LArDLContentTargets.cmake")

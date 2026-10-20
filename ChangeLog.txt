@@ -1,4 +1,14 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v05_08_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Add transformer based view matching.
+Add fallback option for stitching cathode crossing tracks nearly parallel to the cathode.
+Allow gap crossing to consider angle of track to determine gap tolerance.
+Remove deprecated reclustering algorithms.
+Change CosmicRayTaggingTool variable visibility to allow ND derivation.
+Metrics opening angle edge case fix.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v05_07_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Update CosmicRayTaggingTool to have protected attributes for ND derived classes.

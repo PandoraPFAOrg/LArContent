@@ -232,6 +232,7 @@ private:
 
     bool m_useXcoordinate;
     bool m_alwaysApplyT0Calculation;
+    bool m_useYZFallbackForClosestVertices; ///< Whether to fall back to the y-z closest vertices where the x-based choice fails
     int m_halfWindowLayers;
     float m_minLengthSquared;
     float m_minCosRelativeAngle;
