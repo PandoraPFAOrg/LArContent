@@ -9,11 +9,11 @@ cet_set_compiler_flags(
 )
 cet_report_compiler_flags(REPORT_THRESHOLD VERBOSE)
 
-find_package(PandoraSDK 05.01.00 REQUIRED EXPORT)
+find_package(PandoraSDK 05.02.00 REQUIRED EXPORT)
 
 option(PANDORA_MONITORING "Enable Pandora Monitoring" TRUE)
 if(PANDORA_MONITORING)
-  find_package(PandoraMonitoring 05.00.00 REQUIRED EXPORT)
+  find_package(PandoraMonitoring 05.02.00 REQUIRED EXPORT)
 endif()
 
 find_package(Eigen3 3.3 REQUIRED EXPORT)
