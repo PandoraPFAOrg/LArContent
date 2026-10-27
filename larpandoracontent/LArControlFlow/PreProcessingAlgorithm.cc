@@ -87,58 +87,37 @@ void PreProcessingAlgorithm::ProcessCaloHits()
     if (pCaloHitList->size() > m_maxEventHits)
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
-    CaloHitList selectedCaloHitListU, selectedCaloHitListV, selectedCaloHitListW;
-
+    CaloHitList selectedCaloHitListU, selectedCaloHitListV, selectedCaloHitListW, selectedCaloHitListOp;
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         if (m_processedHits.count(pCaloHit))
             continue;
+        m_processedHits.insert(pCaloHit);
 
-        (void)m_processedHits.insert(pCaloHit);
-
-        if (m_onlyAvailableCaloHits && !PandoraContentApi::IsAvailable(*this, pCaloHit))
-            continue;
-
-        if (pCaloHit->GetMipEquivalentEnergy() < m_mipEquivalentCut)
-            continue;
-
-        if (pCaloHit->GetInputEnergy() < std::numeric_limits<float>::epsilon())
+        switch (pCaloHit->GetHitType())
         {
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "PreProcessingAlgorithm: found a hit with zero energy, will remove it" << std::endl;
-
-            continue;
-        }
-
-        if ((pCaloHit->GetCellLengthScale() < m_minCellLengthScale) || (pCaloHit->GetCellLengthScale() > m_maxCellLengthScale))
-        {
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            {
-                std::cout << "PreProcessingAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale() << ", require ("
-                          << m_minCellLengthScale << " - " << m_maxCellLengthScale << "), will remove it" << std::endl;
-            }
-
-            continue;
-        }
-
-        if (TPC_VIEW_U == pCaloHit->GetHitType())
-        {
-            selectedCaloHitListU.push_back(pCaloHit);
-        }
-        else if (TPC_VIEW_V == pCaloHit->GetHitType())
-        {
-            selectedCaloHitListV.push_back(pCaloHit);
-        }
-        else if (TPC_VIEW_W == pCaloHit->GetHitType())
-        {
-            selectedCaloHitListW.push_back(pCaloHit);
+            case OPTICAL:
+                this->ProcessOpticalHit(pCaloHit, selectedCaloHitListOp);
+                break;
+            case TPC_VIEW_U:
+                this->ProcessChargeHit(pCaloHit, selectedCaloHitListU);
+                break;
+            case TPC_VIEW_V:
+                this->ProcessChargeHit(pCaloHit, selectedCaloHitListV);
+                break;
+            case TPC_VIEW_W:
+                this->ProcessChargeHit(pCaloHit, selectedCaloHitListW);
+                break;
+            default:
+                break;
         }
     }
 
-    CaloHitList filteredCaloHitListU, filteredCaloHitListV, filteredCaloHitListW;
+    CaloHitList filteredCaloHitListU, filteredCaloHitListV, filteredCaloHitListW, filteredCaloHitListOp;
     this->GetFilteredCaloHitList(selectedCaloHitListU, filteredCaloHitListU);
     this->GetFilteredCaloHitList(selectedCaloHitListV, filteredCaloHitListV);
     this->GetFilteredCaloHitList(selectedCaloHitListW, filteredCaloHitListW);
+    filteredCaloHitListOp.insert(filteredCaloHitListOp.end(), selectedCaloHitListOp.begin(), selectedCaloHitListOp.end());
 
     CaloHitList filteredInputList;
     filteredInputList.insert(filteredInputList.end(), filteredCaloHitListU.begin(), filteredCaloHitListU.end());
@@ -156,6 +135,48 @@ void PreProcessingAlgorithm::ProcessCaloHits()
 
     if (!filteredCaloHitListW.empty() && !m_outputCaloHitListNameW.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredCaloHitListW, m_outputCaloHitListNameW));
+
+     if (!filteredCaloHitListOp.empty() && !m_outputCaloHitListNameOp.empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredCaloHitListOp, m_outputCaloHitListNameOp));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PreProcessingAlgorithm::ProcessChargeHit(const CaloHit *const pCaloHit, CaloHitList &hitList) const
+{
+    if (m_onlyAvailableCaloHits && !PandoraContentApi::IsAvailable(*this, pCaloHit))
+        return;
+
+    if (pCaloHit->GetMipEquivalentEnergy() < m_mipEquivalentCut)
+        return;
+
+    if (pCaloHit->GetInputEnergy() < std::numeric_limits<float>::epsilon())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "PreProcessingAlgorithm: found a hit with zero energy, will remove it" << std::endl;
+
+        return;
+    }
+
+    if ((pCaloHit->GetCellLengthScale() < m_minCellLengthScale) || (pCaloHit->GetCellLengthScale() > m_maxCellLengthScale))
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+        {
+            std::cout << "PreProcessingAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale() << ", require ("
+                      << m_minCellLengthScale << " - " << m_maxCellLengthScale << "), will remove it" << std::endl;
+        }
+
+        return;
+    }
+
+    hitList.push_back(pCaloHit);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void PreProcessingAlgorithm::ProcessOpticalHit(const CaloHit *const pCaloHit, CaloHitList &hitList) const
+{
+    hitList.push_back(pCaloHit);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,6 +198,9 @@ void PreProcessingAlgorithm::PopulateVoidCaloHitLists() noexcept
 
         if (!m_outputCaloHitListNameW.empty())
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, emptyList, m_outputCaloHitListNameW));
+
+        if (!m_outputCaloHitListNameOp.empty())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, emptyList, m_outputCaloHitListNameOp));
     }
     catch (...)
     {
@@ -266,6 +290,8 @@ StatusCode PreProcessingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameV", m_outputCaloHitListNameV));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameW", m_outputCaloHitListNameW));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameOp", m_outputCaloHitListNameOp));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FilteredCaloHitListName", m_filteredCaloHitListName));
 

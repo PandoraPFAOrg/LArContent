@@ -13,12 +13,12 @@ option(LArContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
 
 # Find Dependencies
 if (NOT TARGET PandoraPFA::PandoraSDK)
-    find_package(PandoraSDK 05.01.00 REQUIRED)
+    find_package(PandoraSDK 05.02.00 REQUIRED)
 endif()
 option(PANDORA_MONITORING "Enable Pandora Monitoring" ON)
 if(PANDORA_MONITORING)
     if (NOT TARGET PandoraPFA::PandoraMonitoring)
-        find_package(PandoraMonitoring 05.00.00 REQUIRED)
+        find_package(PandoraMonitoring 05.02.00 REQUIRED)
     endif()
 endif()
 find_package(Eigen3 3.3 REQUIRED)
@@ -56,6 +56,20 @@ endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 
+function(enable_project_warnings target)
+    target_compile_options(${target} PRIVATE
+        $<$<CXX_COMPILER_ID:GNU,Clang>:
+            -Wall
+            -Wextra
+            -Werror=unused-variable
+            -Werror=unused-parameter
+            -Werror=unused-but-set-variable
+        >
+    )
+endfunction()
+
+enable_project_warnings(${PROJECT_NAME})
+
 #-------------------------------------------------------------------------------------------------------------------------------------------
 # Target: LArDLContent (Optional)
 if(PANDORA_LIBTORCH)
@@ -90,6 +104,8 @@ if(PANDORA_LIBTORCH)
 ######## End backward compatible version
 
     set_target_properties(${DL_PROJECT_NAME} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+
+    enable_project_warnings(${DL_PROJECT_NAME})
 endif()
 
 # --- Installation ---

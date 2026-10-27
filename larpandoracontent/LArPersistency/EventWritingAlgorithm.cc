@@ -102,7 +102,7 @@ StatusCode EventWritingAlgorithm::Initialize()
             return STATUS_CODE_FAILURE;
 
         if (m_useLArCaloHits)
-            m_pEventFileWriter->SetFactory(new LArCaloHitFactory());
+            m_pEventFileWriter->SetFactory(new LArHitFactory());
 
         if (m_useLArMCParticles)
             m_pEventFileWriter->SetFactory(new LArMCParticleFactory());

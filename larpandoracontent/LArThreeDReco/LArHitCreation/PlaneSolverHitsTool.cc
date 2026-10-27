@@ -26,7 +26,7 @@ PlaneSolverHitsTool::PlaneSolverHitsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PlaneSolverHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo,
+void PlaneSolverHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, [[maybe_unused]]const pandora::ParticleFlowObject *const pPfo,
     const pandora::CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector)
 {
 

@@ -21,7 +21,7 @@ DLThreeViewClearShowersTool::DLThreeViewClearShowersTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DLThreeViewClearShowersTool::Run(DLMultiViewMatchingAlgorithm *const pAlgorithm, const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix)
+bool DLThreeViewClearShowersTool::Run(DLMultiViewMatchingAlgorithm *const pAlgorithm, [[maybe_unused]]const DLMultiViewMatchingAlgorithm::SimilarityMatrix &globalSimMatrix)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;

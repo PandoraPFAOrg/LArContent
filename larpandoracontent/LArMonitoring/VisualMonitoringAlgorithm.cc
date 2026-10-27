@@ -74,6 +74,12 @@ StatusCode VisualMonitoringAlgorithm::Run()
         this->VisualizeCaloHitList(*iter);
     }
 
+    // Show specified lists of op hits
+    for (StringVector::const_iterator iter = m_opHitListNames.begin(), iterEnd = m_opHitListNames.end(); iter != iterEnd; ++iter)
+    {
+        this->VisualizeOpHitList(*iter);
+    }
+
     // Show current cluster list
     if (m_showCurrentClusters)
     {
@@ -231,6 +237,27 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
             colorIter = BLACK;
     }
 #endif
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VisualMonitoringAlgorithm::VisualizeOpHitList(const std::string &listName) const
+{
+    const CaloHitList *pOpHitList{nullptr};
+
+    if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, listName, pOpHitList))
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "VisualMonitoringAlgorithm: optical hit list " << listName << " unavailable." << std::endl;
+        return;
+    }
+
+    // Filter calo hit list
+    CaloHitList opHitList;
+    for (const CaloHit *const pOpHit : *pOpHitList)
+        opHitList.push_back(pOpHit);
+
+    PANDORA_MONITORING_API(VisualizeOpHits(this->GetPandora(), &opHitList, listName, -1.f, OPHIT_COLOR_SCALE_LOGARITHMIC));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -402,6 +429,9 @@ StatusCode VisualMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "OpHitListNames", m_opHitListNames));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowCurrentTracks", m_showCurrentTracks));

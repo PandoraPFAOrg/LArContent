@@ -34,7 +34,6 @@ namespace lar_content
 
 MasterAlgorithm::MasterAlgorithm() :
     m_workerInstancesInitialized(false),
-    m_larCaloHitVersion(1),
     m_shouldRunAllHitsCosmicReco(true),
     m_shouldRunStitching(true),
     m_shouldRunCosmicHitRemoval(true),
@@ -168,9 +167,12 @@ StatusCode MasterAlgorithm::Run()
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
 
+    CaloHitList opticalHitList;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetOpticalHitList(opticalHitList));
+
     if (m_shouldRunAllHitsCosmicReco)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(volumeIdToHitListMap));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(volumeIdToHitListMap, opticalHitList));
 
         PfoToLArTPCMap pfoToLArTPCMap;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RecreateCosmicRayPfos(pfoToLArTPCMap));
@@ -187,7 +189,7 @@ StatusCode MasterAlgorithm::Run()
     }
 
     SliceVector sliceVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSlicing(volumeIdToHitListMap, sliceVector));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSlicing(volumeIdToHitListMap, opticalHitList, sliceVector));
 
     if (m_shouldRunNeutrinoRecoOption || m_shouldRunCosmicRecoOption)
     {
@@ -276,6 +278,10 @@ StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volume
 
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
+        const HitType hitType(pCaloHit->GetHitType());
+        if (OPTICAL == hitType)
+            continue;
+
         const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
 
         if (!pLArCaloHit && (1 != nLArTPCs))
@@ -299,7 +305,27 @@ StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volume
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap) const
+StatusCode MasterAlgorithm::GetOpticalHitList(CaloHitList &opticalHitList) const
+{
+    if (m_inputOpHitListName.empty())
+        return STATUS_CODE_SUCCESS;
+
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputOpHitListName, pCaloHitList));
+
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        const HitType hitType(pCaloHit->GetHitType());
+        if (OPTICAL == hitType)
+            opticalHitList.push_back(pCaloHit);
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap, const CaloHitList &opticalHitList) const
 {
     unsigned int workerCounter(0);
 
@@ -312,6 +338,9 @@ StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const VolumeIdToHitListMa
             continue;
 
         for (const CaloHit *const pCaloHit : iter->second.m_allHitList)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
+
+        for (const CaloHit *const pCaloHit : opticalHitList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
 
         if (m_printOverallRecoStatus)
@@ -458,7 +487,7 @@ StatusCode MasterAlgorithm::RunCosmicRayHitRemoval(const PfoList &ambiguousPfos)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHitListMap, SliceVector &sliceVector) const
+StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHitListMap, const CaloHitList &opticalHitList, SliceVector &sliceVector) const
 {
     for (const VolumeIdToHitListMap::value_type &mapEntry : volumeIdToHitListMap)
     {
@@ -508,6 +537,11 @@ StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHit
         }
     }
 
+    // ATTN: Optical hits are not routed via TPC volume IDs and are not sliced; every slice gets access to the full optical hit collection.
+    // They are added as master-owned hits so that RunSliceReconstruction can copy them directly without going through GetParentAddress().
+    for (CaloHitList &sliceHitList : sliceVector)
+        sliceHitList.insert(sliceHitList.end(), opticalHitList.begin(), opticalHitList.end());
+
     if (m_printOverallRecoStatus)
         std::cout << "Identified " << sliceVector.size() << " slice(s)" << std::endl;
 
@@ -539,8 +573,12 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
     {
         for (const CaloHit *const pSliceCaloHit : sliceHits)
         {
+            const HitType hitType(pSliceCaloHit->GetHitType());
+            const bool isOpticalHit(hitType == OPTICAL);
             // ATTN Must ensure we copy the hit actually owned by master instance; access differs with/without slicing enabled
-            const CaloHit *const pCaloHitInMaster(m_shouldRunSlicing ? static_cast<const CaloHit *>(pSliceCaloHit->GetParentAddress()) : pSliceCaloHit);
+            // ATTN Optical hits are always master-owned regardless of slicing mode (for now).
+            const CaloHit *const pCaloHitInMaster((m_shouldRunSlicing && !isOpticalHit) ?
+		        static_cast<const CaloHit *>(pSliceCaloHit->GetParentAddress()) : pSliceCaloHit);
 
             if (m_shouldRunNeutrinoRecoOption)
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceNuWorkerInstance, pCaloHitInMaster));
@@ -650,40 +688,60 @@ StatusCode MasterAlgorithm::Reset()
 
 StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit) const
 {
-    const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
-    if (pLArCaloHit == nullptr)
+    switch (pCaloHit->GetHitType())
     {
-        std::cout << "MasterAlgorithm: Could not cast CaloHit to LArCaloHit" << std::endl;
-        return STATUS_CODE_INVALID_PARAMETER;
+        case OPTICAL:
+        {
+            const LArOpHit *const pLArOpHit{dynamic_cast<const LArOpHit *>(pCaloHit)};
+            if (!pLArOpHit)
+            {
+                std::cout << "MasterAlgorithm: Could not cast CaloHit to LArOpHit" << std::endl;
+                return STATUS_CODE_INVALID_PARAMETER;
+            }
+            LArHitParameters parameters;
+            pLArOpHit->FillParameters(parameters);
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larHitFactory));
+            break;
+        }
+        default:
+        {
+            const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
+            if (!pLArCaloHit)
+            {
+                std::cout << "MasterAlgorithm: Could not cast CaloHit to LArCaloHit" << std::endl;
+                return STATUS_CODE_INVALID_PARAMETER;
+            }
+            LArHitParameters parameters;
+            pLArCaloHit->FillParameters(parameters);
+
+            // For merged worker instances, remap the hit's volume ids to match the merged LArTPC's renumbered readout volumes
+            if ((pPandora == m_pSlicingWorkerInstance) || (pPandora == m_pSliceNuWorkerInstance) || (pPandora == m_pSliceCRWorkerInstance))
+            {
+                const auto offsetIter(m_daughterVolumeIdOffsetMap.find(pLArCaloHit->GetLArTPCVolumeId()));
+
+                if (m_daughterVolumeIdOffsetMap.end() == offsetIter)
+                    return STATUS_CODE_FAILURE;
+
+                parameters.m_larTPCVolumeId = 0;
+                parameters.m_daughterVolumeId = offsetIter->second + pLArCaloHit->GetDaughterVolumeId();
+            }
+
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larHitFactory));
+            break;
+        }
     }
-    LArCaloHitParameters parameters;
-    pLArCaloHit->FillParameters(parameters);
-
-    // For merged worker instances, remap the hit's volume ids to match the merged LArTPC's renumbered readout volumes
-    if ((pPandora == m_pSlicingWorkerInstance) || (pPandora == m_pSliceNuWorkerInstance) || (pPandora == m_pSliceCRWorkerInstance))
-    {
-        const auto offsetIter(m_daughterVolumeIdOffsetMap.find(pLArCaloHit->GetLArTPCVolumeId()));
-
-        if (m_daughterVolumeIdOffsetMap.end() == offsetIter)
-            return STATUS_CODE_FAILURE;
-
-        parameters.m_larTPCVolumeId = 0;
-        parameters.m_daughterVolumeId = offsetIter->second + pLArCaloHit->GetDaughterVolumeId();
-    }
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
     if (m_passMCParticlesToWorkerInstances)
     {
         MCParticleVector mcParticleVector;
-        for (const auto &weightMapEntry : pLArCaloHit->GetMCParticleWeightMap())
+        for (const auto &weightMapEntry : pCaloHit->GetMCParticleWeightMap())
             mcParticleVector.push_back(weightMapEntry.first);
         std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
 
         for (const MCParticle *const pMCParticle : mcParticleVector)
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-                PandoraApi::SetCaloHitToMCParticleRelationship(*pPandora, pLArCaloHit, pMCParticle, pLArCaloHit->GetMCParticleWeightMap().at(pMCParticle)));
+                PandoraApi::SetCaloHitToMCParticleRelationship(*pPandora, pCaloHit, pMCParticle, pCaloHit->GetMCParticleWeightMap().at(pMCParticle)));
         }
     }
 
@@ -1254,9 +1312,6 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "VisualizeOverallRecoStatus", m_visualizeOverallRecoStatus));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LArCaloHitVersion", m_larCaloHitVersion));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ShouldRemoveOutOfTimeHits", m_shouldRemoveOutOfTimeHits));
 
@@ -1282,6 +1337,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputHitListName", m_inputHitListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputOpHitListName", m_inputOpHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedPfoListName", m_recreatedPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedClusterListName", m_recreatedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedVertexListName", m_recreatedVertexListName));

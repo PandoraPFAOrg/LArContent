@@ -473,9 +473,9 @@ void ShortTrackReclusteringAlgorithm::Recluster(const PartitionVector &partition
             // Not all triplets are complete, so we need to check for nullptrs
             if (pHit)
             {
-                const auto offset{std::distance(hits.begin(), std::find(hits.begin(), hits.end(), pHit))};
+                const std::ptrdiff_t offset{std::distance(hits.begin(), std::find(hits.begin(), hits.end(), pHit))};
                 // Only split the hits if the discontinuity hit is not at the start or end of the cluster
-                if (offset != 0 && offset != static_cast<decltype(offset)>(hits.size() - 1))
+                if (offset != 0 && offset != static_cast<std::ptrdiff_t>(hits.size() - 1))
                     this->PartitionHits(hits, pHit, cluster1Hits, cluster2Hits);
             }
             protoPfo.m_viewToHitsMap[view] = std::move(cluster2Hits);
