@@ -10,6 +10,8 @@
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
+#include <Eigen/Dense>
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -265,51 +267,59 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 
 CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &position, const OrderedCaloHitList &caloHitList)
 {
-    const CaloHit *pClosestCaloHit(nullptr);
-    float closestDistanceSquared(std::numeric_limits<float>::max());
+    if (caloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
+    unsigned int nHits(0);
+    for (const auto &entry : caloHitList)
+        nHits += entry.second->size();
+
+    if (nHits == 0)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    Eigen::MatrixXf positions(nHits, 3);
+
+    unsigned int i(0);
     for (const auto &entry : caloHitList)
     {
         for (const CaloHit *const pCaloHit : *entry.second)
         {
-            const float distanceSquared((pCaloHit->GetPositionVector() - position).GetMagnitudeSquared());
-
-            if (distanceSquared < closestDistanceSquared)
-            {
-                closestDistanceSquared = distanceSquared;
-                pClosestCaloHit = pCaloHit;
-            }
+            const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+            positions.row(i) << hitPosition.GetX(), hitPosition.GetY(), hitPosition.GetZ();
+            ++i;
         }
     }
 
-    if (pClosestCaloHit)
-        return pClosestCaloHit->GetPositionVector();
+    const Eigen::RowVector3f positionVector(position.GetX(), position.GetY(), position.GetZ());
+    Eigen::MatrixXf::Index minIndex;
+    (positions.rowwise() - positionVector).rowwise().squaredNorm().minCoeff(&minIndex);
 
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    return CartesianVector(positions(minIndex, 0), positions(minIndex, 1), positions(minIndex, 2));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &position, const CaloHitList &caloHitList)
 {
-    const CaloHit *pClosestCaloHit(nullptr);
-    float closestDistanceSquared(std::numeric_limits<float>::max());
+    if (caloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
+    const unsigned int nHits(caloHitList.size());
+    Eigen::MatrixXf positions(nHits, 3);
+
+    unsigned int i(0);
     for (const CaloHit *const pCaloHit : caloHitList)
     {
-        const float distanceSquared((pCaloHit->GetPositionVector() - position).GetMagnitudeSquared());
-
-        if (distanceSquared < closestDistanceSquared)
-        {
-            closestDistanceSquared = distanceSquared;
-            pClosestCaloHit = pCaloHit;
-        }
+        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+        positions.row(i) << hitPosition.GetX(), hitPosition.GetY(), hitPosition.GetZ();
+        ++i;
     }
 
-    if (pClosestCaloHit)
-        return pClosestCaloHit->GetPositionVector();
+    const Eigen::RowVector3f positionVector(position.GetX(), position.GetY(), position.GetZ());
+    Eigen::MatrixXf::Index minIndex;
+    (positions.rowwise() - positionVector).rowwise().squaredNorm().minCoeff(&minIndex);
 
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    return CartesianVector(positions(minIndex, 0), positions(minIndex, 1), positions(minIndex, 2));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -317,48 +327,51 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 void LArClusterHelper::GetClosestPositions(
     const Cluster *const pCluster1, const Cluster *const pCluster2, CartesianVector &outputPosition1, CartesianVector &outputPosition2)
 {
-    bool distanceFound(false);
-    float minDistanceSquared(std::numeric_limits<float>::max());
+    unsigned int nHits1(0);
+    for (const auto &entry : pCluster1->GetOrderedCaloHitList())
+        nHits1 += entry.second->size();
 
-    CartesianVector closestPosition1(0.f, 0.f, 0.f);
-    CartesianVector closestPosition2(0.f, 0.f, 0.f);
+    unsigned int nHits2(0);
+    for (const auto &entry : pCluster2->GetOrderedCaloHitList())
+        nHits2 += entry.second->size();
 
-    const OrderedCaloHitList &orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
-    const OrderedCaloHitList &orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
+    if (nHits1 == 0 || nHits2 == 0)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    // Loop over hits in cluster 1
-    for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iter1End = orderedCaloHitList1.end(); iter1 != iter1End; ++iter1)
+    Eigen::MatrixXf positions1(nHits1, 3);
+    Eigen::MatrixXf positions2(nHits2, 3);
+
+    unsigned int i(0);
+    for (const auto &entry : pCluster1->GetOrderedCaloHitList())
     {
-        for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(), hitIter1End = iter1->second->end(); hitIter1 != hitIter1End; ++hitIter1)
+        for (const CaloHit *const pCaloHit : *entry.second)
         {
-            const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
-
-            // Loop over hits in cluster 2
-            for (OrderedCaloHitList::const_iterator iter2 = orderedCaloHitList2.begin(), iter2End = orderedCaloHitList2.end(); iter2 != iter2End; ++iter2)
-            {
-                for (CaloHitList::const_iterator hitIter2 = iter2->second->begin(), hitIter2End = iter2->second->end(); hitIter2 != hitIter2End; ++hitIter2)
-                {
-                    const CartesianVector &positionVector2((*hitIter2)->GetPositionVector());
-
-                    const float distanceSquared((positionVector1 - positionVector2).GetMagnitudeSquared());
-
-                    if (distanceSquared < minDistanceSquared)
-                    {
-                        minDistanceSquared = distanceSquared;
-                        closestPosition1 = positionVector1;
-                        closestPosition2 = positionVector2;
-                        distanceFound = true;
-                    }
-                }
-            }
+            const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+            positions1.row(i) << hitPosition.GetX(), hitPosition.GetY(), hitPosition.GetZ();
+            ++i;
         }
     }
 
-    if (!distanceFound)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    i = 0;
+    for (const auto &entry : pCluster2->GetOrderedCaloHitList())
+    {
+        for (const CaloHit *const pCaloHit : *entry.second)
+        {
+            const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+            positions2.row(i) << hitPosition.GetX(), hitPosition.GetY(), hitPosition.GetZ();
+            ++i;
+        }
+    }
 
-    outputPosition1 = closestPosition1;
-    outputPosition2 = closestPosition2;
+    const Eigen::MatrixXf squaredDistances = (positions1.rowwise().squaredNorm().replicate(1, nHits2) +
+                                              positions2.rowwise().squaredNorm().transpose().replicate(nHits1, 1)) -
+                                             2 * positions1 * positions2.transpose();
+
+    Eigen::MatrixXf::Index minRow, minCol;
+    squaredDistances.minCoeff(&minRow, &minCol);
+
+    outputPosition1.SetValues(positions1(minRow, 0), positions1(minRow, 1), positions1(minRow, 2));
+    outputPosition2.SetValues(positions2(minCol, 0), positions2(minCol, 1), positions2(minCol, 2));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
