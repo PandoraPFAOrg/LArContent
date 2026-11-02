@@ -143,8 +143,9 @@ void HierarchyValidationTool::FillRecoVariables(const Pfo *const pBestMatch, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HierarchyValidationTool::FillTree(HierarchyTreeVars &hierarchyTreeVars)
+void HierarchyValidationTool::FillTree([[maybe_unused]] HierarchyTreeVars &hierarchyTreeVars)
 {
+#ifdef MONITORING
     IntVector &trueTier = hierarchyTreeVars.m_trueTier;
     IntVector &trueParentIndex = hierarchyTreeVars.m_trueParentIndex;
     IntVector &recoTier = hierarchyTreeVars.m_recoTier;
@@ -155,6 +156,7 @@ void HierarchyValidationTool::FillTree(HierarchyTreeVars &hierarchyTreeVars)
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HierarchyTree", "BM_HierarchyTier", &recoTier));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "HierarchyTree", "BM_ParentIndex", &recoParentIndex));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), "HierarchyTree"));
+#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
