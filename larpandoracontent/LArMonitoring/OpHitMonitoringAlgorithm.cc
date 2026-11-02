@@ -31,6 +31,7 @@ OpHitMonitoringAlgorithm::~OpHitMonitoringAlgorithm()
 
 StatusCode OpHitMonitoringAlgorithm::Run()
 {
+#ifdef MONITORING
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1, 1, 1));
 
     const CaloHitList *pCaloHitList{nullptr};
@@ -54,6 +55,7 @@ StatusCode OpHitMonitoringAlgorithm::Run()
     }
 
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+#endif
 
     return STATUS_CODE_SUCCESS;
 }

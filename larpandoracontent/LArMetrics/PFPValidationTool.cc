@@ -417,8 +417,9 @@ void PFPValidationTool::GetAltMetrics(const LArHierarchyHelper::MCHierarchy::Nod
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PFPValidationTool::FillTree(PFPTreeVars &pfpTreeVars)
+void PFPValidationTool::FillTree([[maybe_unused]] PFPTreeVars &pfpTreeVars)
 {
+#ifdef MONITORING
     IntVector &truePDG = pfpTreeVars.m_truePDG;
     FloatVector &trueEnergy = pfpTreeVars.m_trueEnergy;
     FloatVector &trueVisEnergy = pfpTreeVars.m_trueVisEnergy;
@@ -540,6 +541,7 @@ void PFPValidationTool::FillTree(PFPTreeVars &pfpTreeVars)
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "PFPTree", "BM_Length", &recoLength));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "PFPTree", "BM_Displacement", &recoDisplacement));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), "PFPTree"));
+#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

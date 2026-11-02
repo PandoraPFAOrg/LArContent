@@ -92,7 +92,7 @@ void EventValidationTool::GetInteractionTypeVariables(const MCParticle *const pM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationTool::FillTree(EventTreeVars &eventTreeVars)
+void EventValidationTool::FillTree([[maybe_unused]] EventTreeVars &eventTreeVars)
 {
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "EventTree", "Run", eventTreeVars.m_run));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "EventTree", "Subrun", eventTreeVars.m_subrun));

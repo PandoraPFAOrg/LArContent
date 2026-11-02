@@ -462,8 +462,9 @@ void TrackValidationTool::MichelValidation(const MCParticleVector &targetMC, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackValidationTool::FillTree(TrackTreeVars &trackTreeVars)
+void TrackValidationTool::FillTree([[maybe_unused]] TrackTreeVars &trackTreeVars)
 {
+#ifdef MONITORING
     FloatVector &recoEndpointX = trackTreeVars.m_recoEndpointX;
     FloatVector &recoEndpointY = trackTreeVars.m_recoEndpointY;
     FloatVector &recoEndpointZ = trackTreeVars.m_recoEndpointZ;
@@ -543,6 +544,7 @@ void TrackValidationTool::FillTree(TrackTreeVars &trackTreeVars)
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "TrackTree", "BM_MichelIsChild", &michelIsChild));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "TrackTree", "BM_MichelIsShower", &michelIsShower));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), "TrackTree"));
+#endif
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
