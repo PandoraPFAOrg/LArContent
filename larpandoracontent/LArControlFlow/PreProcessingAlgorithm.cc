@@ -136,7 +136,7 @@ void PreProcessingAlgorithm::ProcessCaloHits()
     if (!filteredCaloHitListW.empty() && !m_outputCaloHitListNameW.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredCaloHitListW, m_outputCaloHitListNameW));
 
-     if (!filteredCaloHitListOp.empty() && !m_outputCaloHitListNameOp.empty())
+    if (!filteredCaloHitListOp.empty() && !m_outputCaloHitListNameOp.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredCaloHitListOp, m_outputCaloHitListNameOp));
 }
 
@@ -291,7 +291,8 @@ StatusCode PreProcessingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameW", m_outputCaloHitListNameW));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameOp", m_outputCaloHitListNameOp));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameOp", m_outputCaloHitListNameOp));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FilteredCaloHitListName", m_filteredCaloHitListName));
 

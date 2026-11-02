@@ -85,7 +85,7 @@ private:
     bool m_showCurrentCaloHits;               ///< Whether to show current calohitlist
     pandora::StringVector m_caloHitListNames; ///< Names of calo hit lists to show
 
-    pandora::StringVector m_opHitListNames;   ///< Names of optical hit lists to show
+    pandora::StringVector m_opHitListNames; ///< Names of optical hit lists to show
 
     bool m_showCurrentTracks;               ///< Whether to show current tracks
     pandora::StringVector m_trackListNames; ///< Names of track lists to show

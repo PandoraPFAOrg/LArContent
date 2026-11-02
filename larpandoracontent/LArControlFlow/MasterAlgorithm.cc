@@ -577,8 +577,8 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             const bool isOpticalHit(hitType == OPTICAL);
             // ATTN Must ensure we copy the hit actually owned by master instance; access differs with/without slicing enabled
             // ATTN Optical hits are always master-owned regardless of slicing mode (for now).
-            const CaloHit *const pCaloHitInMaster((m_shouldRunSlicing && !isOpticalHit) ?
-		        static_cast<const CaloHit *>(pSliceCaloHit->GetParentAddress()) : pSliceCaloHit);
+            const CaloHit *const pCaloHitInMaster(
+                (m_shouldRunSlicing && !isOpticalHit) ? static_cast<const CaloHit *>(pSliceCaloHit->GetParentAddress()) : pSliceCaloHit);
 
             if (m_shouldRunNeutrinoRecoOption)
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceNuWorkerInstance, pCaloHitInMaster));
@@ -1337,7 +1337,8 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputHitListName", m_inputHitListName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputOpHitListName", m_inputOpHitListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputOpHitListName", m_inputOpHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedPfoListName", m_recreatedPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedClusterListName", m_recreatedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedVertexListName", m_recreatedVertexListName));

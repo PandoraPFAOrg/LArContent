@@ -167,7 +167,8 @@ protected:
      *  @param  opticalHitList the list of optical hits
      *  @param  sliceVector to receive the populated slice vector
      */
-    pandora::StatusCode RunSlicing(const VolumeIdToHitListMap &volumeIdToHitListMap, const pandora::CaloHitList &opticalHitList, SliceVector &sliceVector) const;
+    pandora::StatusCode RunSlicing(
+        const VolumeIdToHitListMap &volumeIdToHitListMap, const pandora::CaloHitList &opticalHitList, SliceVector &sliceVector) const;
 
     /**
      *  @brief  Process each slice under different reconstruction hypotheses.
@@ -371,7 +372,7 @@ protected:
     std::string m_recreatedClusterListName; ///< The output recreated cluster list name
     std::string m_recreatedVertexListName;  ///< The output recreated vertex list name
 
-    float m_inTimeMaxX0;                   ///< Cut on X0 to determine whether particle is clear cosmic ray
+    float m_inTimeMaxX0;           ///< Cut on X0 to determine whether particle is clear cosmic ray
     LArHitFactory m_larHitFactory; ///< Factory for creating LAr Hits during hit copying
 };
 
