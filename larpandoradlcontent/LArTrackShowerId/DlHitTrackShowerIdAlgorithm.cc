@@ -145,7 +145,6 @@ StatusCode DlHitTrackShowerIdAlgorithm::PrepareTrainingSample()
 
     if (hitToMCParticle.empty())
         return STATUS_CODE_SUCCESS;
-
     
     // Prepare input feature vectors
     CaloHitList trainingHitList;    
@@ -244,8 +243,6 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
     FloatVector x_rel, z_rel, x_abs, z_abs, rr, cosTheta, sinTheta, wirePitch, wireAngle, adc, width;
     this->PopulateInputVectors(*pCaloHitList, bounds, vx, vz, x_rel, z_rel, x_abs, z_abs, rr, cosTheta, sinTheta, wirePitch, wireAngle, adc, width, caloHitVector);
 
-    //PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1, 1, 1));
-
     // Ensure each run conforms to the maximum sequence length
     size_t totalSize{rr.size()};
     for (size_t s = 0; s < totalSize; s += m_maxSeqLen)
@@ -277,7 +274,6 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
             }
         }
 
-        //long batchSize = static_cast<long>(rrBatch.size());
         std::vector<LArDLHelper::TorchInput> tensors{
             torch::from_blob(xRelBatch.data(), {m_maxSeqLen}),
             torch::from_blob(zRelBatch.data(), {m_maxSeqLen}),
@@ -313,12 +309,8 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
         LArDLHelper::TorchOutput classLogits{output.squeeze(0)}; // [N, num_classes]
         LArDLHelper::TorchOutput classProbs{torch::softmax(classLogits, 1)};        
         
-        // Now change to classes
-        //LArDLHelper::TorchOutput classes{classProbs.argmax(1)}; // [num_cps]
-        // std::map<int, CaloHitList> classHitsMap{{MIP, CaloHitList()}, {HIP, CaloHitList()}, {EM_TRACK, CaloHitList()},
-        //     {EM_SHOWER, CaloHitList()}, {DIFFUSE, CaloHitList()}};
+        // Save scores
         std::vector<std::string> classLabels({"MIPScore", "HIPScore", "EMTrackScore", "EMShowerScore", "DiffuseScore"});
- 
         for (int i = 0; i < m_maxSeqLen; ++i)
         {
             size_t iInput(s + i);
@@ -336,65 +328,8 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
                 pLArCaloHit->AddHitScore(classScore, classLabel);
             }            
         }
-
-        // for (long i = 0; i < classes.size(0); ++i)
-        // {
-        //     if ((s + i) >= totalSize)
-        //         continue;
-            
-        //     const int predictedClass{classes[i].item<int>()};
-        //     const CaloHit *const pCaloHit{caloHitVector[s + i]};
-        //     classHitsMap[predictedClass].push_back(pCaloHit);
-
-        //     LArCaloHit *const pLArCaloHit{const_cast<LArCaloHit *>(dynamic_cast<const LArCaloHit *>(pCaloHit))};
-        //     [[maybe_unused]] const int classIndex(classes[i].item<int>());
-        //     [[maybe_unused]] const float classScore(classProbs[i][classIndex].item<float>());
-        //     [[maybe_unused]] const std::string classLabel(classLabels.at(classIndex));
-
-            
-        //     pLArCaloHit->AddHitScore(classScore, classLabel);
-        // }
-
-
-        // for (const auto &[predictedClass, caloHitList] : classHitsMap)
-        // {
-        //     std::cout << "predictedClass: " << predictedClass << std::endl;
-        //     std::cout << "n hits: " << caloHitList.size() << std::endl;
-            
-        //     std::string categoryName;
-        //     switch (predictedClass + 1)
-        //     {
-        //         case MIP:
-        //             categoryName = "MIP";
-        //             break;
-        //         case HIP:
-        //             categoryName = "HIP";
-        //             break;
-        //         case EM_TRACK:
-        //             categoryName = "EM_TRACK";
-        //             break;
-        //         case EM_SHOWER:
-        //             categoryName = "EM_SHOWER";
-        //             break;
-        //         case DIFFUSE:
-        //             categoryName = "DIFFUSE";
-        //             break;
-        //         default:
-        //             break;
-        //     }
-        //     // Visualise calo hits for class
-        //     if (!caloHitList.empty())
-        //     {
-        //         int visClass(predictedClass + 1);
-        //         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitList, categoryName,
-        //             visClass == MIP ? BLUE : visClass == HIP ? RED : visClass == EM_TRACK ? VIOLET : visClass == EM_SHOWER ? BLACK : GREEN));
-        //     }
-        // }
-        // PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 
-
-    
     return STATUS_CODE_SUCCESS;
 }
 

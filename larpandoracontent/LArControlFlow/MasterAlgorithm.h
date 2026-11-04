@@ -207,6 +207,14 @@ protected:
     pandora::StatusCode Recreate(const pandora::PfoList &inputPfoList, pandora::PfoList &newPfoList) const;
 
     /**
+     *  @brief  Copy any LArCaloHit parameters set in the worker instance to the master instance
+     *
+     *  @param  pMasterCaloHit the address of the CaloHit in the master pandora instance
+     *  @param  pWorkerCaloHit the address of the CaloHit in the worker pandora instance
+     */    
+    pandora::StatusCode CopyWorkerHitsBackToMaster(const pandora::CaloHit *const pMasterCaloHit, const pandora::CaloHit *const pWorkerCaloHit) const;
+
+    /**
      *  @brief  Recreate a specified pfo in the current pandora instance
      *
      *  @param  pInputPfo the input pfo

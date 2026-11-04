@@ -777,10 +777,18 @@ StatusCode MasterAlgorithm::Recreate(const ParticleFlowObject *const pInputPfo, 
         pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
 
         for (const CaloHit *const pInputCaloHit : inputCaloHitList)
-            newCaloHitList.push_back(static_cast<const CaloHit *>(pInputCaloHit->GetParentAddress()));
+        {
+            const CaloHit *const pMasterCaloHit(static_cast<const CaloHit *>(pInputCaloHit->GetParentAddress()));
+            this->CopyWorkerHitsBackToMaster(pMasterCaloHit, pInputCaloHit);
+            newCaloHitList.push_back(pMasterCaloHit);
+        }
 
         for (const CaloHit *const pInputCaloHit : pInputCluster->GetIsolatedCaloHitList())
-            newIsolatedCaloHitList.push_back(static_cast<const CaloHit *>(pInputCaloHit->GetParentAddress()));
+        {
+            const CaloHit *const pMasterCaloHit(static_cast<const CaloHit *>(pInputCaloHit->GetParentAddress()));
+            this->CopyWorkerHitsBackToMaster(pMasterCaloHit, pInputCaloHit);
+            newIsolatedCaloHitList.push_back(pMasterCaloHit);
+        }
 
         if (!newCaloHitList.empty())
             newClusterList.push_back(this->CreateCluster(pInputCluster, newCaloHitList, newIsolatedCaloHitList));
@@ -822,6 +830,19 @@ StatusCode MasterAlgorithm::Recreate(const ParticleFlowObject *const pInputPfo, 
 
     for (const ParticleFlowObject *const pInputDaughterPfo : pInputPfo->GetDaughterPfoList())
         this->Recreate(pInputDaughterPfo, pNewPfo, newPfoList);
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::CopyWorkerHitsBackToMaster(const CaloHit *const pMasterCaloHit, const CaloHit *const pWorkerCaloHit) const
+{
+    LArCaloHit *const pLArMaster{const_cast<LArCaloHit *>(dynamic_cast<const LArCaloHit *>(pMasterCaloHit))};
+    LArCaloHit *const pLArWorker{const_cast<LArCaloHit *>(dynamic_cast<const LArCaloHit *>(pWorkerCaloHit))};
+            
+    for (unsigned int i = 0; i < pLArWorker->GetHitScores().size(); ++i)
+        pLArMaster->AddHitScore(pLArWorker->GetHitScores().at(i), pLArWorker->GetHitScoreLabels().at(i));
 
     return STATUS_CODE_SUCCESS;
 }
