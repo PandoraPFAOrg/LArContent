@@ -24,10 +24,9 @@ namespace lar_content
 class LArCaloHitParameters : public object_creation::CaloHit::Parameters
 {
 public:
-    pandora::InputUInt m_larTPCVolumeId;   ///< The lar tpc volume id
-    pandora::InputUInt m_daughterVolumeId; ///< The daughter volume id
-    pandora::InputUInt m_channelId;        ///< The channel (wire) id
-
+    pandora::InputUInt m_larTPCVolumeId;    ///< The lar tpc volume id
+    pandora::InputUInt m_daughterVolumeId;  ///< The daughter volume id
+    pandora::InputUInt m_channelId;         ///< The channel (wire) id
     pandora::FloatVector m_hitScores;       ///< Hit scores
     pandora::StringVector m_hitScoreLabels; ///< Labels for the hit scores
 };
@@ -90,32 +89,61 @@ public:
     const pandora::StringVector &GetHitScoreLabels() const;
 
     /**
-     *  @brief  Get the probability that the hit is track-like
+     *  @brief  Get the MIP score for the hit
      *
-     *  @return the probability the hit is track-like
-     */
-    float GetTrackProbability() const;
+     *  @return the hit's MIP score
+     */        
+    float GetMIPScore() const;
 
     /**
-     *  @brief  Get the probability that the hit is shower-like
+     *  @brief  Get the HIP score for the hit
      *
-     *  @return the probability the hit is shower-like
-     */
-    float GetShowerProbability() const;
+     *  @return the hit's HIP score
+     */           
+    float GetHIPScore() const;
 
     /**
-     *  @brief  Set the probability that the hit is track-like
+     *  @brief  Get the EM-track score for the hit
      *
-     *  @param  probability the probability the hit is track-like
-     */
-    void SetTrackProbability(const float probability);
+     *  @return the hit's EM-track score
+     */       
+    float GetEMTrackScore() const;
 
     /**
-     *  @brief  Set the probability that the hit is shower-like
+     *  @brief  Get the EM-shower score for the hit
      *
-     *  @param  probability the probability the hit is shower-like
+     *  @return the hit's EM-shower score
+     */    
+    float GetEMShowerScore() const;
+
+    /**
+     *  @brief  Get the diffuse score for the hit
+     *
+     *  @return the hit's diffuse score
      */
-    void SetShowerProbability(const float probability);
+    float GetDiffuseScore() const;        
+
+    /**
+     *  @brief  Get the track-like score for the hit
+     *
+     *  @return the hit's track-like score
+     */
+    float GetTrackScore() const;
+
+    /**
+     *  @brief  Get the shower-like score for the hit
+     *
+     *  @return the hit's shower-like score
+     */    
+    float GetShowerScore() const;    
+    
+    /**
+     *  @brief  Add a hit score for a given label to the hit
+     *
+     *  @param  hitScore the score to add
+     *  @param  scoreLabel the label for the score to add
+     */
+    void AddHitScore(const float &hitScore, const std::string &scoreLabel);
 
 private:
     unsigned int m_larTPCVolumeId;          ///< The lar tpc volume id
@@ -123,8 +151,6 @@ private:
     unsigned int m_channelId;               ///< The channel (wire) id
     pandora::FloatVector m_hitScores;       ///< Hit scores
     pandora::StringVector m_hitScoreLabels; ///< Labels for the hit scores
-    pandora::InputFloat m_pTrack;           ///< The probability that the hit is track-like
-    pandora::InputFloat m_pShower;          ///< The probability that the hit is shower-like
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -217,6 +243,85 @@ inline const pandora::StringVector &LArCaloHit::GetHitScoreLabels() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline float LArCaloHit::GetMIPScore() const
+{
+    const auto iter(std::find(m_hitScoreLabels.begin(), m_hitScoreLabels.end(), "MIPScore"));
+
+    if (iter == m_hitScoreLabels.end())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+    
+
+    return (m_hitScores.at(iter - m_hitScoreLabels.begin()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArCaloHit::GetHIPScore() const
+{
+    const auto iter(std::find(m_hitScoreLabels.begin(), m_hitScoreLabels.end(), "HIPScore"));
+
+    if (iter == m_hitScoreLabels.end())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+    
+
+    return (m_hitScores.at(iter - m_hitScoreLabels.begin()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArCaloHit::GetEMTrackScore() const
+{
+    const auto iter(std::find(m_hitScoreLabels.begin(), m_hitScoreLabels.end(), "EMTrackScore"));
+
+    if (iter == m_hitScoreLabels.end())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+    
+
+    return (m_hitScores.at(iter - m_hitScoreLabels.begin()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArCaloHit::GetEMShowerScore() const
+{
+    const auto iter(std::find(m_hitScoreLabels.begin(), m_hitScoreLabels.end(), "EMShowerScore"));
+
+    if (iter == m_hitScoreLabels.end())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+    
+
+    return (m_hitScores.at(iter - m_hitScoreLabels.begin()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArCaloHit::GetDiffuseScore() const
+{
+    const auto iter(std::find(m_hitScoreLabels.begin(), m_hitScoreLabels.end(), "DiffuseScore"));
+
+    if (iter == m_hitScoreLabels.end())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+    
+
+    return (m_hitScores.at(iter - m_hitScoreLabels.begin()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArCaloHit::GetTrackScore() const
+{
+    return (this->GetMIPScore() + this->GetHIPScore());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArCaloHit::GetShowerScore() const
+{
+    return (this->GetEMTrackScore() + this->GetEMShowerScore() + this->GetDiffuseScore());
+}
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline void LArCaloHit::FillParameters(LArCaloHitParameters &parameters) const
 {
     parameters.m_cellGeometry = this->GetCellGeometry();
@@ -249,36 +354,13 @@ inline void LArCaloHit::FillParameters(LArCaloHitParameters &parameters) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float LArCaloHit::GetTrackProbability() const
+inline void LArCaloHit::AddHitScore(const float &hitScore, const std::string &scoreLabel)
 {
-    return m_pTrack.Get();
-}
+    if (std::find(m_hitScoreLabels.begin(), m_hitScoreLabels.end(), scoreLabel) != m_hitScoreLabels.end())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_ALREADY_PRESENT);
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float LArCaloHit::GetShowerProbability() const
-{
-    return m_pShower.Get();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void LArCaloHit::SetTrackProbability(const float probability)
-{
-    if (probability >= 0.f)
-        m_pTrack = probability;
-    else
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void LArCaloHit::SetShowerProbability(const float probability)
-{
-    if (probability >= 0.f)
-        m_pShower = probability;
-    else
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    m_hitScores.emplace_back(hitScore);
+    m_hitScoreLabels.emplace_back(scoreLabel);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

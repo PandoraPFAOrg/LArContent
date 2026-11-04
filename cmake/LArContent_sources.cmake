@@ -70,6 +70,7 @@ set(LAR_CONTENT_SRCS
     larpandoracontent/LArMonitoring/EventValidationBaseAlgorithm.cc
     larpandoracontent/LArMonitoring/HierarchyMonitoringAlgorithm.cc
     larpandoracontent/LArMonitoring/HierarchyValidationAlgorithm.cc
+    larpandoracontent/LArMonitoring/MCMonitoringAlgorithm.cc
     larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.cc
     larpandoracontent/LArMonitoring/MuonLeadingEventValidationAlgorithm.cc
     larpandoracontent/LArMonitoring/NeutrinoEventValidationAlgorithm.cc

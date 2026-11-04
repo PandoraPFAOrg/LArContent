@@ -359,6 +359,42 @@ void LArMCParticleHelper::GetAllAncestorMCParticles(const pandora::MCParticle *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArMCParticleHelper::GetMCToHitsMap(const CaloHitList &caloHitList2D, LArMCParticleHelper::MCContributionMap &mcToHitsMap, 
+    const bool allowHitSharing)
+{
+    for (const CaloHit *const pCaloHit : caloHitList2D)
+    {
+        try
+        {
+            const MCParticle *pMainMC(nullptr);
+            float bestWeight{0.f};
+            const MCParticleWeightMap mcWeightMap(pCaloHit->GetMCParticleWeightMap());
+            for (const auto &[pMC, weight] : mcWeightMap)
+            {
+                if (allowHitSharing)
+                {
+                    mcToHitsMap[pMC].emplace_back(pCaloHit);
+                }
+                else
+                {
+                    if (weight > bestWeight)
+                    {
+                        pMainMC = pMC;
+                        bestWeight = weight;
+                    }
+                }
+            }
+            if (!allowHitSharing && pMainMC)
+                mcToHitsMap[pMainMC].emplace_back(pCaloHit);
+        }
+        catch (const StatusCodeException &)
+        {
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArMCParticleHelper::GetPrimaryMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcPrimaryVector)
 {
     for (const MCParticle *const pMCParticle : *pMCParticleList)
@@ -484,6 +520,24 @@ const MCParticle *LArMCParticleHelper::GetLeadingMCParticle(const MCParticle *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const MCParticle *LArMCParticleHelper::GetLeadingEMParticle(const MCParticle *const pMC)
+{
+    int pdg{std::abs(pMC->GetParticleId())};
+    const MCParticle *pLeadingEM{pdg == PHOTON || pdg == E_MINUS ? pMC : nullptr};
+    const MCParticle *pParentMC{pMC};
+
+    while (!pParentMC->GetParentList().empty())
+    {
+        pParentMC = pParentMC->GetParentList().front();
+        pdg = std::abs(pParentMC->GetParticleId());
+        if (pdg == PHOTON || pdg == E_MINUS)
+            pLeadingEM = pParentMC;
+    }
+
+    return pLeadingEM;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap)
 {
     for (const MCParticle *const pMCParticle : *pMCParticleList)
@@ -523,33 +577,6 @@ void LArMCParticleHelper::GetMCToSelfMap(const MCParticleList *const pMCParticle
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
         mcToSelfMap[pMCParticle] = pMCParticle;
-    }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-
-void LArMCParticleHelper::GetMCToHitsMap(const CaloHitList &caloHitList2D, MCContributionMap &mcToHitsMap, const bool allowSharing)
-{
-    for (const CaloHit *const pCaloHit : caloHitList2D)
-    {
-        try
-        {
-            if (!allowSharing)
-            {
-                const MCParticle *const pMC{MCParticleHelper::GetMainMCParticle(pCaloHit)};
-                mcToHitsMap[pMC].emplace_back(pCaloHit);
-            }
-            else
-            {
-                const MCParticleWeightMap &mcWeightMap{pCaloHit->GetMCParticleWeightMap()};
-
-                for (const auto &[pMC, _] : mcWeightMap)
-                    mcToHitsMap[pMC].emplace_back(pCaloHit);
-            }
-        }
-        catch (StatusCodeException &)
-        {
-        }
     }
 }
 

@@ -229,6 +229,15 @@ public:
     static const pandora::MCParticle *GetLeadingMCParticle(const pandora::MCParticle *const pMCParticle, const int hierarchyTierLimit = 1);
 
     /**
+     *  @brief  Get the leading electronmagnetic particle in the hierarchy
+     *
+     *  @param  pMCParticle the input mc particle
+     *
+     *  @return address of the leading EM particle, if it exists, nullptr otherwise
+     */
+    static const pandora::MCParticle *GetLeadingEMParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
      *  @brief  Get vector of primary MC particles from an input list of MC particles
      *
      *  @param  pMCParticleList the input mc particle list
@@ -292,6 +301,16 @@ public:
     static void GetAllAncestorMCParticles(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &ancestorMCParticleList);
 
     /**
+     *  @brief  Get a map of MC particles to their corresponding hits.
+     *
+     *  @param[in]  caloHitList  the list of calo hits to link to MC particles
+     *  @param[out] mcToHitsMap the output map of MC particles to their corresponding hits
+     *  @param[in]  allowHitSharing whether to allow hits to be shared by MC particles in the map
+     */
+    static void GetMCToHitsMap(const pandora::CaloHitList &caloHitList, LArMCParticleHelper::MCContributionMap &mcToHitsMap,
+        const bool allowHitSharing = false);
+
+    /**
      *  @brief  Get mapping from individual mc particles (in a provided list) and their primary parent mc particles
      *
      *  @param  pMCParticleList the input mc particle list
@@ -314,15 +333,6 @@ public:
      *  @param  mcToSelfMap the output mapping between mc particles and themselves
      */
     static void GetMCToSelfMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcToSelfMap);
-
-    /*
-     *  @brief  Retrieve the map from MC to calo hits for all particles
-     *
-     *  @param  caloHitList The calo hit list for which MC particle matches are to be determined
-     *  @param  mcToHitsMap The map to populate
-     *  @param  allowSharing Whether to allow hits to be shared between multiple MC particles
-     **/
-    static void GetMCToHitsMap(const pandora::CaloHitList &caloHitList, MCContributionMap &mcToHitsMap, const bool allowSharing = false);
 
     /*
      *  @brief  Retrieve the map from MC to calo hits for reconstructable particles
