@@ -6,7 +6,7 @@ find_package(cetmodules 3.13.00 QUIET)
 # set(LARCONTENT_VERSION 05.03.00)
 
 if(cetmodules_FOUND)
-  project(larpandoracontent VERSION 05.08.00 LANGUAGES CXX)
+  project(larpandoracontent VERSION 05.09.00 LANGUAGES CXX)
 else()
   project(LArContent VERSION 05.09.00 LANGUAGES CXX)
 endif()
