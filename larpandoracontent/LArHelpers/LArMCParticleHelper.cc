@@ -167,11 +167,11 @@ bool LArMCParticleHelper::IsCCInteraction(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle)
+bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle, const bool useIsVisible)
 {
     try
     {
-        return (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle);
+        return (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle, useIsVisible) == pMCParticle);
     }
     catch (const StatusCodeException &)
     {
@@ -404,7 +404,7 @@ void LArMCParticleHelper::GetFirstVisibleMCParticles(const MCParticle *const pRo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *const pMCParticle)
+const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *const pMCParticle, const bool useIsVisible)
 {
     // Navigate upward through MC daughter/parent links - collect this particle and all its parents
     MCParticleVector mcVector;
@@ -424,10 +424,21 @@ const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *co
     // Navigate downward through MC parent/daughter links - return the first long-lived charged particle
     for (MCParticleVector::const_reverse_iterator iter = mcVector.rbegin(), iterEnd = mcVector.rend(); iter != iterEnd; ++iter)
     {
+        if(useIsVisible)
+        {
         const MCParticle *const pNextParticle = *iter;
 
         if (LArMCParticleHelper::IsVisible(pNextParticle))
             return pNextParticle;
+        }
+        else
+        {
+            const MCParticle *const pLastParticle = *iter;
+            if(!IsNeutrino(pLastParticle))
+            {
+                return pLastParticle;
+            }
+        }
     }
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);

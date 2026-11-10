@@ -145,7 +145,7 @@ public:
      *
      *  @return boolean
      */
-    static bool IsPrimary(const pandora::MCParticle *const pMCParticle);
+    static bool IsPrimary(const pandora::MCParticle *const pMCParticle, const bool useIsVisible = true);
 
     /**
      *  @brief  Whether a provided mc particle matches the implemented definition of being leading
@@ -214,10 +214,11 @@ public:
      *  @brief  Get the primary parent mc particle
      *
      *  @param  pMCParticle the input mc particle
+     *  @param  useIsVisible whether to use IsVisible or not (only false for ND)
      *
      *  @return address of the primary parent mc particle
      */
-    static const pandora::MCParticle *GetPrimaryMCParticle(const pandora::MCParticle *const pMCParticle);
+    static const pandora::MCParticle *GetPrimaryMCParticle(const pandora::MCParticle *const pMCParticle, const bool useIsVisible = true);
 
     /**
      *  @brief  Get the leading particle in the hierarchy, for use at ProtoDUNE
