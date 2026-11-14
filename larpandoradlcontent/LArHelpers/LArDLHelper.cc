@@ -43,6 +43,13 @@ void LArDLHelper::InitialiseInput(const at::IntArrayRef dimensions, TorchInput &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArDLHelper::InitialiseInput(const at::IntArrayRef dimensions, TorchInput &tensor, const torch::TensorOptions &options)
+{
+    tensor = torch::zeros(dimensions, options);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, TorchOutput &output)
 {
     // Set torch to no_grad mode to avoid tracking gradients, which are not
@@ -51,6 +58,18 @@ void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, Torc
     torch::NoGradGuard guard;
 
     output = model.forward(input).toTensor();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, TorchOutput &output, const std::string &funcName)
+{
+    // Set torch to no_grad mode to avoid tracking gradients, which are not
+    // needed during inference.
+    // This uses RAII, so the guard is only active within this scope.
+    torch::NoGradGuard guard;
+
+    output = model.get_method(funcName)(input).toTensor();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

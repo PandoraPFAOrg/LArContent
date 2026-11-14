@@ -868,10 +868,12 @@ public:
 	 *
 	 *  @param  pRecoNode The reco node pointer
 	 *  @param  allMCHits The CaloHit list of all of the MC particles that will be used for the selection
+     *  @param  pMCHitIds Optional map for looking up IDs of MC. Made if missing.
 	 *
 	 *  @return The selected reco calo hits
 	 */
-        const pandora::CaloHitList GetSelectedRecoHits(const RecoHierarchy::Node *pRecoNode, const pandora::CaloHitList &allMCHits) const;
+        const pandora::CaloHitList GetSelectedRecoHits(const RecoHierarchy::Node *pRecoNode, const pandora::CaloHitList &allMCHits,
+            const std::unordered_set<intptr_t> *pMCHitIds = nullptr) const;
 
         /**
          *  @brief  Prints information about which reco nodes are matched to the MC nodes, information about hit sharing, purity and
