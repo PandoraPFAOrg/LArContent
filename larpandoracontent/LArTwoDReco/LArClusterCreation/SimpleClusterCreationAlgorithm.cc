@@ -26,122 +26,109 @@ SimpleClusterCreationAlgorithm::SimpleClusterCreationAlgorithm() :
 
 StatusCode SimpleClusterCreationAlgorithm::Run()
 {
-    const CaloHitList *pCaloHitList = NULL;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
+    const CaloHitList *pCaloHitList(nullptr);
 
-    // Select available calo hits for clustering
-    CaloHitList caloHitList;
-    this->SelectCaloHits(pCaloHitList, caloHitList);
+    if (m_inputCaloHitListName.empty())
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCaloHitListName, pCaloHitList));
+    }
 
-    if (caloHitList.empty())
+    CaloHitVector caloHitVector;
+
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        if (PandoraContentApi::IsAvailable(*this, pCaloHit))
+            caloHitVector.push_back(pCaloHit);
+    }
+
+    if (caloHitVector.empty())
         return STATUS_CODE_SUCCESS;
 
-    // Build map of associations between selected calo hits
-    HitAssociationMap hitAssociationMap;
-    this->BuildAssociationMap(caloHitList, hitAssociationMap);
+    std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
 
-    // Create new clusters
-    this->CreateClusters(caloHitList, hitAssociationMap);
+    HitAssociationMap hitAssociationMap;
+    this->BuildAssociationMap(caloHitVector, hitAssociationMap);
+    this->CreateClusters(caloHitVector, hitAssociationMap);
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SimpleClusterCreationAlgorithm::SelectCaloHits(const CaloHitList *const pInputList, CaloHitList &outputList) const
+void SimpleClusterCreationAlgorithm::BuildAssociationMap(const CaloHitVector &caloHitVector, HitAssociationMap &hitAssociationMap) const
 {
-    for (const CaloHit *const pCaloHit : *pInputList)
-    {
-        if (PandoraContentApi::IsAvailable(*this, pCaloHit))
-            outputList.push_back(pCaloHit);
-    }
+    this->BuildAssociationMapKDTree<2>(caloHitVector, hitAssociationMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SimpleClusterCreationAlgorithm::BuildAssociationMap(const CaloHitList &caloHitList, HitAssociationMap &hitAssociationMap) const
+void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitVector &caloHitVector, const HitAssociationMap &hitAssociationMap) const
 {
-    for (const CaloHit *const pCaloHitI : caloHitList)
+    if (!m_outputClusterListName.empty())
     {
-        for (const CaloHit *const pCaloHitJ : caloHitList)
-        {
-            if (pCaloHitI == pCaloHitJ)
-                continue;
-
-            if ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_clusteringWindowSquared)
-            {
-                CaloHitList &caloHitListI(hitAssociationMap[pCaloHitI]);
-
-                if (caloHitListI.end() == std::find(caloHitListI.begin(), caloHitListI.end(), pCaloHitJ))
-                    caloHitListI.push_back(pCaloHitJ);
-
-                CaloHitList &caloHitListJ(hitAssociationMap[pCaloHitI]);
-
-                if (caloHitListJ.end() == std::find(caloHitListJ.begin(), caloHitListJ.end(), pCaloHitI))
-                    caloHitListJ.push_back(pCaloHitI);
-            }
-        }
+        const ClusterList *pClusterList(nullptr);
+        std::string temporaryListName;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, temporaryListName));
     }
-}
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitList &caloHitList, const HitAssociationMap &hitAssociationMap) const
-{
-    CaloHitSet vetoList;
-    CaloHitVector caloHitVector(caloHitList.begin(), caloHitList.end());
-    std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
+    CaloHitSet usedHits;
 
     for (const CaloHit *const pSeedCaloHit : caloHitVector)
     {
-        if (vetoList.count(pSeedCaloHit))
+        if (!usedHits.insert(pSeedCaloHit).second)
             continue;
 
-        CaloHitList mergeList;
-        this->CollectAssociatedHits(pSeedCaloHit, pSeedCaloHit, hitAssociationMap, vetoList, mergeList);
-
-        const Cluster *pCluster = NULL;
         PandoraContentApi::Cluster::Parameters parameters;
         parameters.m_caloHitList.push_back(pSeedCaloHit);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
-        vetoList.insert(pSeedCaloHit);
 
-        for (const CaloHit *const pAssociatedCaloHit : mergeList)
+        std::vector<std::pair<const CaloHitVector *, std::size_t>> stack;
+
+        // Push the nearby hits of a hit (if it has any) onto the stack, as a
+        // (hits, next index to visit) pair.  The stack makes the walk
+        // iterative, so it doesn't recurse once per hit in a cluster, while
+        // visiting hits in the same depth-first order as a recursive walk
+        // would.
+        const auto push = [&](const CaloHit *const pCaloHit)
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pAssociatedCaloHit));
-            vetoList.insert(pAssociatedCaloHit);
+            const auto iter(hitAssociationMap.find(pCaloHit));
+
+            if (iter != hitAssociationMap.end())
+                stack.emplace_back(&iter->second, 0);
+        };
+
+        push(pSeedCaloHit);
+
+        while (!stack.empty())
+        {
+            auto &[pNearbyHits, nextIndex] = stack.back();
+
+            if (nextIndex == pNearbyHits->size())
+            {
+                stack.pop_back();
+                continue;
+            }
+
+            const CaloHit *const pNearbyHit((*pNearbyHits)[nextIndex++]);
+
+            if (usedHits.insert(pNearbyHit).second)
+            {
+                parameters.m_caloHitList.push_back(pNearbyHit);
+                push(pNearbyHit);
+            }
         }
+
+        const Cluster *pCluster(nullptr);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
     }
+
+    if (!m_outputClusterListName.empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_outputClusterListName));
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void SimpleClusterCreationAlgorithm::CollectAssociatedHits(const CaloHit *const pSeedCaloHit, const CaloHit *const pCurrentCaloHit,
-    const HitAssociationMap &hitAssociationMap, const CaloHitSet &vetoList, CaloHitList &mergeList) const
-{
-    if (vetoList.count(pCurrentCaloHit))
-        return;
-
-    HitAssociationMap::const_iterator iter1 = hitAssociationMap.find(pCurrentCaloHit);
-    if (iter1 == hitAssociationMap.end())
-        return;
-
-    CaloHitVector caloHitVector(iter1->second.begin(), iter1->second.end());
-    std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
-
-    for (const CaloHit *const pAssociatedCaloHit : caloHitVector)
-    {
-        if (pAssociatedCaloHit == pSeedCaloHit)
-            continue;
-
-        if (mergeList.end() != std::find(mergeList.begin(), mergeList.end(), pAssociatedCaloHit))
-            continue;
-
-        mergeList.push_back(pAssociatedCaloHit);
-
-        this->CollectAssociatedHits(pSeedCaloHit, pAssociatedCaloHit, hitAssociationMap, vetoList, mergeList);
-    }
-}
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode SimpleClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
@@ -149,6 +136,11 @@ StatusCode SimpleClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHan
     float clusteringWindow = std::sqrt(m_clusteringWindowSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ClusteringWindow", clusteringWindow));
     m_clusteringWindowSquared = clusteringWindow * clusteringWindow;
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_inputCaloHitListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName", m_outputClusterListName));
 
     return STATUS_CODE_SUCCESS;
 }

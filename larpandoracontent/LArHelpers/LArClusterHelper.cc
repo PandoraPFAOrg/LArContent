@@ -317,38 +317,66 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 void LArClusterHelper::GetClosestPositions(
     const Cluster *const pCluster1, const Cluster *const pCluster2, CartesianVector &outputPosition1, CartesianVector &outputPosition2)
 {
-    bool distanceFound(false);
-    float minDistanceSquared(std::numeric_limits<float>::max());
-
-    CartesianVector closestPosition1(0.f, 0.f, 0.f);
-    CartesianVector closestPosition2(0.f, 0.f, 0.f);
-
     const OrderedCaloHitList &orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
     const OrderedCaloHitList &orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
 
-    // Loop over hits in cluster 1
-    for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iter1End = orderedCaloHitList1.end(); iter1 != iter1End; ++iter1)
+    CartesianPointVector contiguousPoints;
+    contiguousPoints.reserve(pCluster2->GetNCaloHits());
+
+    float minX(std::numeric_limits<float>::max()), minY(minX), minZ(minX);
+    float maxX(-std::numeric_limits<float>::max()), maxY(maxX), maxZ(maxX);
+
+    // INFO: Find the bounding box of the second cluster, and store all of its
+    // hits in a contiguous vector for quick access.
+    for (const auto &entry : orderedCaloHitList2)
     {
-        for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(), hitIter1End = iter1->second->end(); hitIter1 != hitIter1End; ++hitIter1)
+        for (const CaloHit *const pCaloHit : *entry.second)
         {
-            const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
+            const CartesianVector &p(pCaloHit->GetPositionVector());
+            contiguousPoints.push_back(p);
+            minX = std::min(minX, p.GetX());
+            maxX = std::max(maxX, p.GetX());
+            minY = std::min(minY, p.GetY());
+            maxY = std::max(maxY, p.GetY());
+            minZ = std::min(minZ, p.GetZ());
+            maxZ = std::max(maxZ, p.GetZ());
+        }
+    }
 
-            // Loop over hits in cluster 2
-            for (OrderedCaloHitList::const_iterator iter2 = orderedCaloHitList2.begin(), iter2End = orderedCaloHitList2.end(); iter2 != iter2End; ++iter2)
+    bool distanceFound(false);
+    float minDistanceSquared(std::numeric_limits<float>::max());
+    CartesianVector closestPosition1(0.f, 0.f, 0.f);
+    CartesianVector closestPosition2(0.f, 0.f, 0.f);
+
+    for (const auto &entry1 : orderedCaloHitList1)
+    {
+        for (const CaloHit *const pCaloHit1 : *entry1.second)
+        {
+            const CartesianVector &posVec1(pCaloHit1->GetPositionVector());
+            const float x1(posVec1.GetX()), y1(posVec1.GetY()), z1(posVec1.GetZ());
+
+            // INFO: We can use the bounding box of the second cluster to
+            // quickly eliminate hits that are too far away, before a more costly search.
+            if (distanceFound && !contiguousPoints.empty())
             {
-                for (CaloHitList::const_iterator hitIter2 = iter2->second->begin(), hitIter2End = iter2->second->end(); hitIter2 != hitIter2End; ++hitIter2)
+                const float gx(std::max(std::max(minX - x1, x1 - maxX), 0.f));
+                const float gy(std::max(std::max(minY - y1, y1 - maxY), 0.f));
+                const float gz(std::max(std::max(minZ - z1, z1 - maxZ), 0.f));
+
+                if (gx * gx + gy * gy + gz * gz >= minDistanceSquared)
+                    continue;
+            }
+
+            for (const CartesianVector &posVec2 : contiguousPoints)
+            {
+                const float distanceSquared((posVec1 - posVec2).GetMagnitudeSquared());
+
+                if (distanceSquared < minDistanceSquared)
                 {
-                    const CartesianVector &positionVector2((*hitIter2)->GetPositionVector());
-
-                    const float distanceSquared((positionVector1 - positionVector2).GetMagnitudeSquared());
-
-                    if (distanceSquared < minDistanceSquared)
-                    {
-                        minDistanceSquared = distanceSquared;
-                        closestPosition1 = positionVector1;
-                        closestPosition2 = positionVector2;
-                        distanceFound = true;
-                    }
+                    minDistanceSquared = distanceSquared;
+                    closestPosition1 = posVec1;
+                    closestPosition2 = posVec2;
+                    distanceFound = true;
                 }
             }
         }

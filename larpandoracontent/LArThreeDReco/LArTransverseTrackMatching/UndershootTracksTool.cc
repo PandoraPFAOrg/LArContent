@@ -54,7 +54,8 @@ void UndershootTracksTool::GetIteratorListModifications(
                 const LArPointingCluster pointingClusterB(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB));
 
                 LArPointingCluster::Vertex vertexA, vertexB;
-                LArPointingClusterHelper::GetClosestVertices(pointingClusterA, pointingClusterB, vertexA, vertexB);
+                if (!LArPointingClusterHelper::TryGetClosestVertices(pointingClusterA, pointingClusterB, vertexA, vertexB))
+                    continue;
 
                 float transverseAB(std::numeric_limits<float>::max()), transverseBA(std::numeric_limits<float>::max());
                 float longitudinalAB(-std::numeric_limits<float>::max()), longitudinalBA(-std::numeric_limits<float>::max());

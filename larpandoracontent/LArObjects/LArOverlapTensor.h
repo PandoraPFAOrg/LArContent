@@ -276,15 +276,26 @@ private:
         pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
 
     /**
-     *  @brief  Explore connections associated with a given cluster
+     *  @brief  Get the clusters in the available elements connected to a specified cluster, and optionally the elements themselves
      *
      *  @param  pCluster address of the cluster
+     *  @param  ignoreUnavailable whether to ignore unavailable clusters
+     *  @param  pElementList to receive the sorted elements, or nullptr if only the clusters are wanted
      *  @param  clusterListU connected u clusters
      *  @param  clusterListV connected v clusters
      *  @param  clusterListW connected w clusters
      */
-    void ExploreConnections(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, pandora::ClusterList &clusterListU,
-        pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
+    void GetConnectedClusters(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList *const pElementList,
+        pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
+
+    /**
+     *  @brief  Explore connections associated with a given cluster
+     *
+     *  @param  pCluster address of the cluster
+     *  @param  ignoreUnavailable whether to ignore unavailable clusters
+     *  @param  connectedClusters the connected clusters (all views) found so far, to be added to
+     */
+    void ExploreConnections(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, pandora::ClusterSet &connectedClusters) const;
 
     TheTensor m_overlapTensor;                     ///< The overlap tensor
     ClusterNavigationMap m_clusterNavigationMapUV; ///< The cluster navigation map U->V

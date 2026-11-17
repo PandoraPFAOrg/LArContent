@@ -73,6 +73,7 @@ void TrainedVertexSelectionAlgorithm::CalculateShowerClusterList(const ClusterLi
 
     HitKDTree2D kdTree;
     HitToClusterMap hitToClusterMap;
+    NearbyClusterCache nearbyClusterCache;
 
     if (!m_useShowerClusteringApproximation)
         this->PopulateKdTree(availableShowerLikeClusters, kdTree, hitToClusterMap);
@@ -83,23 +84,29 @@ void TrainedVertexSelectionAlgorithm::CalculateShowerClusterList(const ClusterLi
         showerCluster.push_back(availableShowerLikeClusters.back());
         availableShowerLikeClusters.pop_back();
 
-        bool addedCluster(true);
-        while (addedCluster && !availableShowerLikeClusters.empty())
+        if (!m_useShowerClusteringApproximation)
         {
-            addedCluster = false;
-            for (const Cluster *const pCluster : showerCluster)
+            auto cursor(showerCluster.begin());
+
+            while (cursor != showerCluster.end() && !availableShowerLikeClusters.empty())
             {
-                if (!m_useShowerClusteringApproximation)
-                {
-                    addedCluster = this->AddClusterToShower(kdTree, hitToClusterMap, availableShowerLikeClusters, pCluster, showerCluster);
-                }
-                else
+                if (!this->AddClusterToShower(kdTree, hitToClusterMap, nearbyClusterCache, availableShowerLikeClusters, *cursor, showerCluster))
+                    ++cursor;
+            }
+        }
+        else
+        {
+            bool addedCluster(true);
+            while (addedCluster && !availableShowerLikeClusters.empty())
+            {
+                addedCluster = false;
+                for (const Cluster *const pCluster : showerCluster)
                 {
                     addedCluster = this->AddClusterToShower(clusterEndPointsMap, availableShowerLikeClusters, pCluster, showerCluster);
-                }
 
-                if (addedCluster)
-                    break;
+                    if (addedCluster)
+                        break;
+                }
             }
         }
 
@@ -203,22 +210,31 @@ bool TrainedVertexSelectionAlgorithm::AddClusterToShower(const ClusterEndPointsM
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TrainedVertexSelectionAlgorithm::AddClusterToShower(HitKDTree2D &kdTree, const HitToClusterMap &hitToClusterMap,
-    ClusterList &availableShowerLikeClusters, const Cluster *const pCluster, ClusterList &showerCluster) const
+    NearbyClusterCache &nearbyClusterCache, ClusterList &availableShowerLikeClusters, const Cluster *const pCluster, ClusterList &showerCluster) const
 {
-    ClusterSet nearbyClusters;
-    CaloHitList daughterHits;
-    pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
+    auto cacheIter(nearbyClusterCache.find(pCluster));
 
-    for (const CaloHit *const pCaloHit : daughterHits)
+    if (cacheIter == nearbyClusterCache.end())
     {
-        KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_showerClusteringDistance, m_showerClusteringDistance);
+        ClusterSet newNearbyClusters;
+        CaloHitList daughterHits;
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(daughterHits);
 
-        HitKDNode2DList found;
-        kdTree.search(searchRegionHits, found);
+        for (const CaloHit *const pCaloHit : daughterHits)
+        {
+            KDTreeBox searchRegionHits = build_2d_kd_search_region(pCaloHit, m_showerClusteringDistance, m_showerClusteringDistance);
 
-        for (const auto &hit : found)
-            (void)nearbyClusters.insert(hitToClusterMap.at(hit.data));
+            HitKDNode2DList found;
+            kdTree.search(searchRegionHits, found);
+
+            for (const auto &hit : found)
+                (void)newNearbyClusters.insert(hitToClusterMap.at(hit.data));
+        }
+
+        cacheIter = nearbyClusterCache.emplace(pCluster, std::move(newNearbyClusters)).first;
     }
+
+    const ClusterSet &nearbyClusters(cacheIter->second);
 
     for (auto iter = availableShowerLikeClusters.begin(); iter != availableShowerLikeClusters.end(); ++iter)
     {

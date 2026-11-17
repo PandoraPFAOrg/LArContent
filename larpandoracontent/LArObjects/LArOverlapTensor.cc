@@ -43,9 +43,8 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
 {
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
     {
-        ElementList tempElementList;
         ClusterList clusterListU, clusterListV, clusterListW;
-        this->GetConnectedElements(iterU->first, ignoreUnavailable, tempElementList, clusterListU, clusterListV, clusterListW);
+        this->GetConnectedClusters(iterU->first, ignoreUnavailable, nullptr, clusterListU, clusterListV, clusterListW);
 
         const Cluster *pClusterU(nullptr), *pClusterV(nullptr), *pClusterW(nullptr);
         if (!this->DefaultAmbiguityFunction(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
@@ -252,18 +251,31 @@ template <typename T>
 void OverlapTensor<T>::GetConnectedElements(const Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
     ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
-    ClusterList localClusterListU, localClusterListV, localClusterListW;
-    this->ExploreConnections(pCluster, ignoreUnavailable, localClusterListU, localClusterListV, localClusterListW);
+    this->GetConnectedClusters(pCluster, ignoreUnavailable, &elementList, clusterListU, clusterListV, clusterListW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void OverlapTensor<T>::GetConnectedClusters(const Cluster *const pCluster, const bool ignoreUnavailable, ElementList *const pElementList,
+    ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
+{
+    ClusterSet connectedClusters;
+    this->ExploreConnections(pCluster, ignoreUnavailable, connectedClusters);
 
     // ATTN Now need to check that all clusters received are from fully available tensor elements
-    elementList.clear();
+    if (pElementList)
+        pElementList->clear();
+
     clusterListU.clear();
     clusterListV.clear();
     clusterListW.clear();
 
+    ClusterSet addedU, addedV, addedW;
+
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
     {
-        if (localClusterListU.end() == std::find(localClusterListU.begin(), localClusterListU.end(), iterU->first))
+        if (!connectedClusters.count(iterU->first))
             continue;
 
         for (typename OverlapMatrix::const_iterator iterV = iterU->second.begin(), iterVEnd = iterU->second.end(); iterV != iterVEnd; ++iterV)
@@ -273,27 +285,27 @@ void OverlapTensor<T>::GetConnectedElements(const Cluster *const pCluster, const
                 if (ignoreUnavailable && (!iterU->first->IsAvailable() || !iterV->first->IsAvailable() || !iterW->first->IsAvailable()))
                     continue;
 
-                Element element(iterU->first, iterV->first, iterW->first, iterW->second);
-                elementList.push_back(element);
+                if (pElementList)
+                    pElementList->emplace_back(iterU->first, iterV->first, iterW->first, iterW->second);
 
-                if (clusterListU.end() == std::find(clusterListU.begin(), clusterListU.end(), iterU->first))
+                if (addedU.insert(iterU->first).second)
                     clusterListU.push_back(iterU->first);
-                if (clusterListV.end() == std::find(clusterListV.begin(), clusterListV.end(), iterV->first))
+                if (addedV.insert(iterV->first).second)
                     clusterListV.push_back(iterV->first);
-                if (clusterListW.end() == std::find(clusterListW.begin(), clusterListW.end(), iterW->first))
+                if (addedW.insert(iterW->first).second)
                     clusterListW.push_back(iterW->first);
             }
         }
     }
 
-    std::sort(elementList.begin(), elementList.end());
+    if (pElementList)
+        std::sort(pElementList->begin(), pElementList->end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapTensor<T>::ExploreConnections(const Cluster *const pCluster, const bool ignoreUnavailable, ClusterList &clusterListU,
-    ClusterList &clusterListV, ClusterList &clusterListW) const
+void OverlapTensor<T>::ExploreConnections(const Cluster *const pCluster, const bool ignoreUnavailable, ClusterSet &connectedClusters) const
 {
     if (ignoreUnavailable && !pCluster->IsAvailable())
         return;
@@ -303,22 +315,20 @@ void OverlapTensor<T>::ExploreConnections(const Cluster *const pCluster, const b
     if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    ClusterList &clusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
     const ClusterNavigationMap &navigationMap((TPC_VIEW_U == hitType) ? m_clusterNavigationMapUV
             : (TPC_VIEW_V == hitType)                                 ? m_clusterNavigationMapVW
                                                                       : m_clusterNavigationMapWU);
 
-    if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pCluster))
+    if (!connectedClusters.insert(pCluster).second)
         return;
 
-    clusterList.push_back(pCluster);
     ClusterNavigationMap::const_iterator iter = navigationMap.find(pCluster);
 
     if (navigationMap.end() == iter)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     for (ClusterList::const_iterator cIter = iter->second.begin(), cIterEnd = iter->second.end(); cIter != cIterEnd; ++cIter)
-        this->ExploreConnections(*cIter, ignoreUnavailable, clusterListU, clusterListV, clusterListW);
+        this->ExploreConnections(*cIter, ignoreUnavailable, connectedClusters);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

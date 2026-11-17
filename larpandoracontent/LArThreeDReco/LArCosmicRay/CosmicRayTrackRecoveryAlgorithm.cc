@@ -177,8 +177,9 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster *const pSeedCl
 
     TwoDSlidingFitResultMap::const_iterator fsIter = slidingFitResultMap.find(pSeedCluster);
 
+    // ATTN Clusters whose sliding fit failed (e.g. too sparse for the fit window) have no entry: leave them unmatched rather than aborting the algorithm
     if (slidingFitResultMap.end() == fsIter)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+        return;
 
     const TwoDSlidingFitResult &slidingFitResult1(fsIter->second);
     const CartesianVector &innerVertex1(slidingFitResult1.GetGlobalMinLayerPosition());
@@ -209,7 +210,7 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster *const pSeedCl
         TwoDSlidingFitResultMap::const_iterator ftIter = slidingFitResultMap.find(*tIter);
 
         if (slidingFitResultMap.end() == ftIter)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+            continue;
 
         const TwoDSlidingFitResult &slidingFitResult2(ftIter->second);
         const CartesianVector &innerVertex2(slidingFitResult2.GetGlobalMinLayerPosition());

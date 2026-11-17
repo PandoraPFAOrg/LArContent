@@ -93,15 +93,19 @@ private:
     void GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor, TransverseOverlapResult &bestTransverseOverlapResult) const;
 
     /**
-     *  @brief  Get track overlap results for possible connected segments
+     *  @brief  Get the best of the accumulated overlap results for the possible connected previous segments
      *
      *  @param  indexU the index u
      *  @param  indexV the index v
      *  @param  indexW the index w
-     *  @param  transverseOverlapResultVector the transverse overlap result vector
+     *  @param  sumResults the accumulated overlap results for all segment index combinations, indexed (u * nIndicesV + v) * nIndicesW + w
+     *  @param  nIndicesV the number of v indices
+     *  @param  nIndicesW the number of w indices
+     *
+     *  @return the best previous result, or an uninitialized result if there are none
      */
-    void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
-        FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const;
+    TransverseOverlapResult GetBestPreviousOverlapResult(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
+        const TransverseOverlapResultVector &sumResults, const unsigned int nIndicesV, const unsigned int nIndicesW) const;
 
     void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

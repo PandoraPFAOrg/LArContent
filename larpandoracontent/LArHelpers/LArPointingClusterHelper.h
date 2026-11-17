@@ -82,6 +82,7 @@ public:
 
     /**
      *  @brief  Given a pair of pointing clusters, receive the closest or farthest pair of vertices
+     *
      *  @param  useX use relative X coordinates in the calculation
      *  @param  useY use relative Y coordinates in the calculation
      *  @param  useZ use relative Z coordinates in the calculation
@@ -102,6 +103,48 @@ public:
      *  @param  closestVertexJ to receive the relevant vertex from the second pointing cluster
      */
     static void GetClosestVertices(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+        LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
+
+    /**
+     *  @brief  Non-throwing version of GetClosestVertices, to be used when checking for the existence of a closest pair of vertices.
+     *
+     *  @param  useX use relative X coordinates in the calculation
+     *  @param  useY use relative Y coordinates in the calculation
+     *  @param  useZ use relative Z coordinates in the calculation
+     *  @param  pointingClusterI the first pointing cluster
+     *  @param  pointingClusterJ the second pointing cluster
+     *  @param  closestVertexI to receive the relevant vertex from the first pointing cluster
+     *  @param  closestVertexJ to receive the relevant vertex from the second pointing cluster
+     *
+     *  @return boolean, true if a closest pair was found, false otherwise
+     */
+    static bool TryGetClosestVertices(const bool useX, const bool useY, const bool useZ, const LArPointingCluster &pointingClusterI,
+        const LArPointingCluster &pointingClusterJ, LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
+
+    /**
+     *  @brief  Non-throwing version of GetClosestVertices, using all of the X, Y and Z coordinates
+     *
+     *  @param  pointingClusterI the first pointing cluster
+     *  @param  pointingClusterJ the second pointing cluster
+     *  @param  closestVertexI to receive the relevant vertex from the first pointing cluster
+     *  @param  closestVertexJ to receive the relevant vertex from the second pointing cluster
+     *
+     *  @return boolean, true if a closest pair was found, false otherwise
+     */
+    static bool TryGetClosestVertices(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+        LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
+
+    /**
+     *  @brief  Non-throwing version of GetClosestVerticesInX, using only the X coordinate
+     *
+     *  @param  pointingClusterI the first pointing cluster
+     *  @param  pointingClusterJ the second pointing cluster
+     *  @param  closestVertexI to receive the relevant vertex from the first pointing cluster
+     *  @param  closestVertexJ to receive the relevant vertex from the second pointing cluster
+     *
+     *  @return boolean, true if a closest pair was found, false otherwise
+     */
+    static bool TryGetClosestVerticesInX(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
         LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
 
     /**

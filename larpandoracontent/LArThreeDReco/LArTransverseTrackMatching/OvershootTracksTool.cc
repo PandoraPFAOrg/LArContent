@@ -53,8 +53,9 @@ void OvershootTracksTool::GetIteratorListModifications(
                 const LArPointingCluster pointingClusterB2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2));
 
                 LArPointingCluster::Vertex vertexA1, vertexB1, vertexA2, vertexB2;
-                LArPointingClusterHelper::GetClosestVerticesInX(pointingClusterA1, pointingClusterB1, vertexA1, vertexB1);
-                LArPointingClusterHelper::GetClosestVerticesInX(pointingClusterA2, pointingClusterB2, vertexA2, vertexB2);
+                if (!LArPointingClusterHelper::TryGetClosestVerticesInX(pointingClusterA1, pointingClusterB1, vertexA1, vertexB1) ||
+                    !LArPointingClusterHelper::TryGetClosestVerticesInX(pointingClusterA2, pointingClusterB2, vertexA2, vertexB2))
+                    continue;
 
                 if (!this->PassesVertexCuts(vertexA1, vertexB1) || !this->PassesVertexCuts(vertexA2, vertexB2))
                     continue;

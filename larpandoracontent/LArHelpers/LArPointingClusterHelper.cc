@@ -107,8 +107,17 @@ CartesianVector LArPointingClusterHelper::GetProjectedPosition(const CartesianVe
 void LArPointingClusterHelper::GetClosestVertices(const bool useX, const bool useY, const bool useZ, const LArPointingCluster &pointingClusterI,
     const LArPointingCluster &pointingClusterJ, LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
 {
-    if (pointingClusterI.GetCluster() == pointingClusterJ.GetCluster())
+    if (!LArPointingClusterHelper::TryGetClosestVertices(useX, useY, useZ, pointingClusterI, pointingClusterJ, closestVertexI, closestVertexJ))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPointingClusterHelper::TryGetClosestVertices(const bool useX, const bool useY, const bool useZ, const LArPointingCluster &pointingClusterI,
+    const LArPointingCluster &pointingClusterJ, LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
+{
+    if (pointingClusterI.GetCluster() == pointingClusterJ.GetCluster())
+        return false;
 
     if (!useX && !useY && !useZ)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -147,12 +156,28 @@ void LArPointingClusterHelper::GetClosestVertices(const bool useX, const bool us
             {
                 closestVertexI = vtxI;
                 closestVertexJ = vtxJ;
-                return;
+                return true;
             }
         }
     }
 
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPointingClusterHelper::TryGetClosestVertices(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+    LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
+{
+    return LArPointingClusterHelper::TryGetClosestVertices(true, true, true, pointingClusterI, pointingClusterJ, closestVertexI, closestVertexJ);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPointingClusterHelper::TryGetClosestVerticesInX(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+    LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
+{
+    return LArPointingClusterHelper::TryGetClosestVertices(true, false, false, pointingClusterI, pointingClusterJ, closestVertexI, closestVertexJ);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

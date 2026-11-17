@@ -19,6 +19,7 @@
 #include "larpandoracontent/LArVertex/VertexSelectionBaseAlgorithm.h"
 
 #include <random>
+#include <unordered_map>
 
 namespace lar_content
 {
@@ -169,6 +170,7 @@ protected:
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
     typedef std::unordered_map<const pandora::CaloHit *, const pandora::Cluster *> HitToClusterMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterSet> NearbyClusterCache;
 
     /**
      * @brief   Populate kd tree with information about hits in a provided list of clusters
@@ -197,14 +199,15 @@ protected:
      *
      *  @param  kdTree the kd tree, used purely for efficiency in events with large hit multiplicity
      *  @param  hitToClusterMap the hit to cluster map, used to interpret kd tree findings
+     *  @param  nearbyClusterCache per-cluster cache of nearby clusters (the kd tree and hit map are static, so this never goes stale)
      *  @param  availableShowerLikeClusters the list of shower-like clusters still available
      *  @param  pCluster the cluster in the shower cluster from which to consider distances
      *  @param  showerCluster the shower cluster
      *
      *  @return boolean
      */
-    bool AddClusterToShower(HitKDTree2D &kdTree, const HitToClusterMap &hitToClusterMap, pandora::ClusterList &availableShowerLikeClusters,
-        const pandora::Cluster *const pCluster, pandora::ClusterList &showerCluster) const;
+    bool AddClusterToShower(HitKDTree2D &kdTree, const HitToClusterMap &hitToClusterMap, NearbyClusterCache &nearbyClusterCache,
+        pandora::ClusterList &availableShowerLikeClusters, const pandora::Cluster *const pCluster, pandora::ClusterList &showerCluster) const;
 
     /**
      *  @brief  Calculate the event parameters

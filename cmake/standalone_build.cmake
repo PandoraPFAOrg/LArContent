@@ -7,6 +7,10 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Default install path" FORCE)
 endif()
 
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
+endif()
+
 # Build Options
 option(PANDORA_LIBTORCH "Build the LArDLContent library against LibTorch" OFF)
 option(LArContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
