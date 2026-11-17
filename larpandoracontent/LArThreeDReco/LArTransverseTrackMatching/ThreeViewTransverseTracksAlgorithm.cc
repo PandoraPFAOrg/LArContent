@@ -218,32 +218,31 @@ void ThreeViewTransverseTracksAlgorithm::GetBestOverlapResult(
     maxIndexV = std::min(m_maxFitSegmentIndex, maxIndexV);
     maxIndexW = std::min(m_maxFitSegmentIndex, maxIndexW);
 
-    // Accumulated results for every combination of segment indices, in one flat array (default entries are uninitialized)
+    const auto findOrNull = [](const auto &map, const unsigned int key)
+    {
+        const auto iter(map.find(key));
+        return (iter == map.end()) ? nullptr : &iter->second;
+    };
+
+    // Accumulated results for every combination of segment indices, in one flat array.
     const unsigned int nIndicesV(maxIndexV + 1), nIndicesW(maxIndexW + 1);
     TransverseOverlapResultVector sumResults((maxIndexU + 1) * nIndicesV * nIndicesW);
 
     for (unsigned int indexU = 0; indexU <= maxIndexU; ++indexU)
     {
-        const auto uIter(fitSegmentTensor.find(indexU));
+        const FitSegmentMatrix *const pMatrix(findOrNull(fitSegmentTensor, indexU));
 
         for (unsigned int indexV = 0; indexV <= maxIndexV; ++indexV)
         {
-            const auto vIter((fitSegmentTensor.end() == uIter) ? FitSegmentMatrix::const_iterator() : uIter->second.find(indexV));
-            const bool hasV(fitSegmentTensor.end() != uIter && uIter->second.end() != vIter);
+            const FitSegmentToOverlapResultMap *const pRow(pMatrix ? findOrNull(*pMatrix, indexV) : nullptr);
 
             for (unsigned int indexW = 0; indexW <= maxIndexW; ++indexW)
             {
                 const TransverseOverlapResult maxTransverseOverlapResult(
                     this->GetBestPreviousOverlapResult(indexU, indexV, indexW, sumResults, nIndicesV, nIndicesW));
 
-                TransverseOverlapResult thisOverlapResult;
-                if (hasV)
-                {
-                    const auto wIter(vIter->second.find(indexW));
-
-                    if (vIter->second.end() != wIter)
-                        thisOverlapResult = wIter->second;
-                }
+                const TransverseOverlapResult *const pThisResult(pRow ? findOrNull(*pRow, indexW) : nullptr);
+                const TransverseOverlapResult thisOverlapResult(pThisResult ? *pThisResult : TransverseOverlapResult());
 
                 if (!thisOverlapResult.IsInitialized() && !maxTransverseOverlapResult.IsInitialized())
                     continue;

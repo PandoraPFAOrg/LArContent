@@ -166,6 +166,22 @@ bool LArPointingClusterHelper::TryGetClosestVertices(const bool useX, const bool
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArPointingClusterHelper::TryGetClosestVertices(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+    LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
+{
+    return LArPointingClusterHelper::TryGetClosestVertices(true, true, true, pointingClusterI, pointingClusterJ, closestVertexI, closestVertexJ);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPointingClusterHelper::TryGetClosestVerticesInX(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
+    LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
+{
+    return LArPointingClusterHelper::TryGetClosestVertices(true, false, false, pointingClusterI, pointingClusterJ, closestVertexI, closestVertexJ);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPointingClusterHelper::GetClosestVertices(const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
     LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ)
 {

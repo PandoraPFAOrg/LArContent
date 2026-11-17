@@ -326,6 +326,8 @@ void LArClusterHelper::GetClosestPositions(
     float minX(std::numeric_limits<float>::max()), minY(minX), minZ(minX);
     float maxX(-std::numeric_limits<float>::max()), maxY(maxX), maxZ(maxX);
 
+    // INFO: Find the bounding box of the second cluster, and store all of its
+    // hits in a contiguous vector for quick access.
     for (const auto &entry : orderedCaloHitList2)
     {
         for (const CaloHit *const pCaloHit : *entry.second)
@@ -353,8 +355,8 @@ void LArClusterHelper::GetClosestPositions(
             const CartesianVector &posVec1(pCaloHit1->GetPositionVector());
             const float x1(posVec1.GetX()), y1(posVec1.GetY()), z1(posVec1.GetZ());
 
-            // INFO: Skip this hit if even the closest hit of the pCluster2
-            // bounding box is no closer than the best pair so far.
+            // INFO: We can use the bounding box of the second cluster to
+            // quickly eliminate hits that are too far away, before a more costly search.
             if (distanceFound && !contiguousPoints.empty())
             {
                 const float gx(std::max(std::max(minX - x1, x1 - maxX), 0.f));
