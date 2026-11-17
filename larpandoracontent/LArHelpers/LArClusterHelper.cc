@@ -14,8 +14,6 @@
 #include <cmath>
 #include <limits>
 
-#include <vector>
-
 using namespace pandora;
 
 namespace lar_content
@@ -322,8 +320,8 @@ void LArClusterHelper::GetClosestPositions(
     const OrderedCaloHitList &orderedCaloHitList1(pCluster1->GetOrderedCaloHitList());
     const OrderedCaloHitList &orderedCaloHitList2(pCluster2->GetOrderedCaloHitList());
 
-    std::vector<LArClusterHelper::Point> points2;
-    points2.reserve(pCluster2->GetNCaloHits());
+    CartesianPointVector contiguousPoints;
+    contiguousPoints.reserve(pCluster2->GetNCaloHits());
 
     float minX(std::numeric_limits<float>::max()), minY(minX), minZ(minX);
     float maxX(-std::numeric_limits<float>::max()), maxY(maxX), maxZ(maxX);
@@ -333,7 +331,7 @@ void LArClusterHelper::GetClosestPositions(
         for (const CaloHit *const pCaloHit : *entry.second)
         {
             const CartesianVector &p(pCaloHit->GetPositionVector());
-            points2.push_back({p.GetX(), p.GetY(), p.GetZ()});
+            contiguousPoints.push_back(p);
             minX = std::min(minX, p.GetX());
             maxX = std::max(maxX, p.GetX());
             minY = std::min(minY, p.GetY());
@@ -352,10 +350,12 @@ void LArClusterHelper::GetClosestPositions(
     {
         for (const CaloHit *const pCaloHit1 : *entry1.second)
         {
-            const CartesianVector &positionVector1(pCaloHit1->GetPositionVector());
-            const float x1(positionVector1.GetX()), y1(positionVector1.GetY()), z1(positionVector1.GetZ());
+            const CartesianVector &posVec1(pCaloHit1->GetPositionVector());
+            const float x1(posVec1.GetX()), y1(posVec1.GetY()), z1(posVec1.GetZ());
 
-            if (distanceFound && !points2.empty())
+            // INFO: Skip this hit if even the closest hit of the pCluster2
+            // bounding box is no closer than the best pair so far.
+            if (distanceFound && !contiguousPoints.empty())
             {
                 const float gx(std::max(std::max(minX - x1, x1 - maxX), 0.f));
                 const float gy(std::max(std::max(minY - y1, y1 - maxY), 0.f));
@@ -365,16 +365,15 @@ void LArClusterHelper::GetClosestPositions(
                     continue;
             }
 
-            for (std::size_t i = 0, n = points2.size(); i < n; ++i)
+            for (const CartesianVector &posVec2 : contiguousPoints)
             {
-                const float dx(x1 - points2[i].m_x), dy(y1 - points2[i].m_y), dz(z1 - points2[i].m_z);
-                const float distanceSquared(dx * dx + dy * dy + dz * dz);
+                const float distanceSquared((posVec1 - posVec2).GetMagnitudeSquared());
 
                 if (distanceSquared < minDistanceSquared)
                 {
                     minDistanceSquared = distanceSquared;
-                    closestPosition1 = positionVector1;
-                    closestPosition2 = CartesianVector(points2[i].m_x, points2[i].m_y, points2[i].m_z);
+                    closestPosition1 = posVec1;
+                    closestPosition2 = posVec2;
                     distanceFound = true;
                 }
             }

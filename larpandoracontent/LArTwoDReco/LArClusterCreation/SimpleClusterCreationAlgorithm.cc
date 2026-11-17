@@ -9,7 +9,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArUtility/KDTreeLinkerToolsT.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h"
 
@@ -62,37 +61,7 @@ StatusCode SimpleClusterCreationAlgorithm::Run()
 
 void SimpleClusterCreationAlgorithm::BuildAssociationMap(const CaloHitVector &caloHitVector, HitAssociationMap &hitAssociationMap) const
 {
-    typedef KDTreeLinkerAlgo<const CaloHit *, 2> HitKDTree;
-    typedef KDTreeNodeInfoT<const CaloHit *, 2> HitKDNode;
-
-    const CaloHitList caloHitList(caloHitVector.begin(), caloHitVector.end());
-    std::vector<HitKDNode> hitKDNodes;
-    HitKDTree kdTree;
-    kdTree.build(hitKDNodes, fill_and_bound_2d_kd_tree(caloHitList, hitKDNodes));
-
-    const float window(std::sqrt(m_clusteringWindowSquared));
-
-    for (const CaloHit *const pCaloHitI : caloHitVector)
-    {
-        std::vector<HitKDNode> found;
-        kdTree.search(build_2d_kd_search_region(pCaloHitI, window, window), found);
-
-        CaloHitVector nearbyHits;
-
-        for (const HitKDNode &node : found)
-        {
-            const CaloHit *const pCaloHitJ(node.data);
-
-            if (pCaloHitJ != pCaloHitI && (pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_clusteringWindowSquared)
-                nearbyHits.push_back(pCaloHitJ);
-        }
-
-        if (!nearbyHits.empty())
-        {
-            std::sort(nearbyHits.begin(), nearbyHits.end(), LArClusterHelper::SortHitsByPosition);
-            hitAssociationMap.emplace(pCaloHitI, std::move(nearbyHits));
-        }
-    }
+    this->BuildAssociationMapKDTree<2>(caloHitVector, hitAssociationMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -118,12 +87,11 @@ void SimpleClusterCreationAlgorithm::CreateClusters(const CaloHitVector &caloHit
 
         std::vector<std::pair<const CaloHitVector *, std::size_t>> stack;
 
-        // INFO: Lambda function to push nearby hits onto the stack, if they
-        // exist in the association map
-        //
-        // This is needed because the references to the nearby hit vectors are
-        // invalidated when the vector is moved into the map, so we can't just
-        // iterate over the map directly
+        // Push the nearby hits of a hit (if it has any) onto the stack, as a
+        // (hits, next index to visit) pair.  The stack makes the walk
+        // iterative, so it doesn't recurse once per hit in a cluster, while
+        // visiting hits in the same depth-first order as a recursive walk
+        // would.
         const auto push = [&](const CaloHit *const pCaloHit)
         {
             const auto iter(hitAssociationMap.find(pCaloHit));

@@ -51,8 +51,6 @@ if(PANDORA_MONITORING)
   target_compile_definitions(LArPandoraContent PUBLIC MONITORING)
 endif()
 
-target_compile_options(LArPandoraContent PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fno-semantic-interposition>)
-
 if(PANDORA_LIBTORCH)
   include(${PANDORA_PROJECT_ROOT}/cmake/LArDLContent_sources.cmake)
 

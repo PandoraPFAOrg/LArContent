@@ -22,11 +22,6 @@ class LArClusterHelper
 public:
     typedef std::set<unsigned int> UIntSet;
 
-    struct Point
-    {
-        float m_x, m_y, m_z;
-    };
-
     /**
      *  @brief  Get all hits (ordered and isoltated) associated with a two dimensional cluster
      *

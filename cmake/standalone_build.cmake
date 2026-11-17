@@ -70,11 +70,6 @@ function(enable_project_warnings target)
             -Werror=unused-but-set-variable
         >
     )
-    target_compile_options(${target} PRIVATE
-        $<$<CXX_COMPILER_ID:GNU>:
-            -fno-semantic-interposition
-        >
-    )
 endfunction()
 
 enable_project_warnings(${PROJECT_NAME})
