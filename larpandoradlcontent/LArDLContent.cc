@@ -18,6 +18,7 @@
 #include "larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.h"
 #include "larpandoradlcontent/LArShowerGrowing/DLTwoDShowerGrowingAlgorithm.h"
 #include "larpandoradlcontent/LArSignalId/DlSNSignalAlgorithm.h"
+#include "larpandoradlcontent/LArSlicing/DlSlicingAlgorithm.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLLaterTierHierarchyTool.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLNeutrinoHierarchyAlgorithm.h"
 #include "larpandoradlcontent/LArThreeDReco/LArEventBuilding/DLPrimaryHierarchyTool.h"
@@ -50,6 +51,7 @@
     d("LArDLSNSignal",                   DlSNSignalAlgorithm)                                         \
     d("LArDLThreeDClusterSplitting",     DLThreeDClusterSplittingAlgorithm)                           \
     d("LArDLTrackCharacterisation",      DlTrackCharacterisationAlgorithm)                            \
+    d("LArDLSlicing",                    DlSlicingAlgorithm)                                          \
     d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)                       \
     d("LArDLVertexing",                  DlVertexingAlgorithm)                                        \
     d("LArCNNTrackShowerCounting",       CNNTrackShowerCountingAlgorithm)                             \
