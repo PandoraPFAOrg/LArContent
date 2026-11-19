@@ -15,8 +15,8 @@
 namespace lar_content
 {
 
-ThreeDVertexingHoughTransform::ThreeDVertexingHoughTransform(const std::vector<float> &thresholds, const float scalingFactor, const float tolerance, const int minVotes,
-    const float nmsRadius, const int maxSeedClass, const bool useDynamicSeedClass) :
+ThreeDVertexingHoughTransform::ThreeDVertexingHoughTransform(const std::vector<float> &thresholds, const float scalingFactor,
+    const float tolerance, const int minVotes, const float nmsRadius, const int maxSeedClass, const bool useDynamicSeedClass) :
     m_thresholds(thresholds),
     m_scalingFactor(scalingFactor),
     m_tolerance(tolerance),
@@ -36,21 +36,17 @@ ThreeDVertexingHoughTransform::ThreeDVertexingHoughTransform(const std::vector<f
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDVertexingHoughTransform::GetSeedAndVoterIndices(const std::vector<int> &predClasses, std::vector<int> &seedIndices, std::vector<int> &voterIndices) const
+void ThreeDVertexingHoughTransform::GetSeedAndVoterIndices(
+    const std::vector<int> &predClasses, std::vector<int> &seedIndices, std::vector<int> &voterIndices) const
 {
     const int numHits = predClasses.size();
     const int noiseClass = m_thresholds.size();
-
     int targetSeedClass = m_maxSeedClass;
 
-    // Reserve the sizes for the vectors to avoid multiple allocations
     seedIndices.reserve(numHits);
     voterIndices.reserve(numHits);
 
-    // Optional: Dynamically find the absolute lowest available class in this point cloud.
-    // In some instances...there many not be a class 0 or 1 etc (i.e. true vertex is in gap)
-    // so this should let it go as low as it needs to find seeds.
-    //
+    // ATTN: Optionally, dynamically find the absolute lowest available class in this point cloud.
     // TODO: Should there be a cut off? If m_maxSeedClass + X break and don't run?
     if (m_useDynamicSeedClass)
     {
@@ -77,12 +73,10 @@ void ThreeDVertexingHoughTransform::GetSeedAndVoterIndices(const std::vector<int
                 seedIndices.push_back(i);
         }
 
-        // The last class is noise, so we don't want those voting.
         if (bestClass > targetSeedClass && bestClass != noiseClass)
             voterIndices.push_back(i);
     }
 
-    // Resize the vectors to the actual number of seeds and voters found
     seedIndices.resize(seedIndices.size());
     voterIndices.resize(voterIndices.size());
 }
@@ -95,12 +89,10 @@ void ThreeDVertexingHoughTransform::CalculateSortScores(const std::vector<int> &
     const int numSeeds = seedIndices.size();
     const int numClasses = m_thresholds.size() + 1;
 
-    // Find the maximum votes across the slice
     float maxVotes = 0.0f;
     for (int s = 0; s < numSeeds; ++s)
         maxVotes = std::max(maxVotes, voteCounts[s]);
 
-    // Define the relative strict threshold (within 3 votes of the max)
     const float strictThreshold = std::max(0.0f, maxVotes - 3.0f);
 
     for (int s = 0; s < numSeeds; ++s)
@@ -108,7 +100,6 @@ void ThreeDVertexingHoughTransform::CalculateSortScores(const std::vector<int> &
         const int seedGlobalIdx = seedIndices[s];
         const int seedClass = predClasses[seedGlobalIdx];
 
-        // Calculate Confidence
         const int logitOffset = seedGlobalIdx * numClasses;
         float maxLogit = -std::numeric_limits<float>::max();
 
@@ -121,6 +112,8 @@ void ThreeDVertexingHoughTransform::CalculateSortScores(const std::vector<int> &
 
         const float confidence = std::exp(logits[logitOffset + seedClass] - maxLogit) / sumExp;
 
+        // ATTN: These weights are entirely arbitrary, but were chosen to help prioritize seeds
+        // with lower predicted distances, and to prioritize seeds with higher confidence and more votes.
         float score = ((m_maxSeedClass + 1) - seedClass) * 10000.0f;
 
         if (voteCounts[s] >= strictThreshold && voteCounts[s] >= 5.0f)
@@ -134,7 +127,8 @@ void ThreeDVertexingHoughTransform::CalculateSortScores(const std::vector<int> &
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<pandora::CartesianVector> ThreeDVertexingHoughTransform::Fit(const std::vector<pandora::CartesianVector> &hitPositions, const std::vector<float> &logits) const
+std::vector<pandora::CartesianVector> ThreeDVertexingHoughTransform::Fit(
+    const std::vector<pandora::CartesianVector> &hitPositions, const std::vector<float> &logits) const
 {
     const int numHits = hitPositions.size();
     const int numClasses = m_thresholds.size() + 1;
@@ -165,7 +159,6 @@ std::vector<pandora::CartesianVector> ThreeDVertexingHoughTransform::Fit(const s
         predClasses[i] = bestClass;
     }
 
-    // Separate hits into seeds and voters.
     this->GetSeedAndVoterIndices(predClasses, seedIndices, voterIndices);
 
     if (seedIndices.empty())
@@ -176,15 +169,12 @@ std::vector<pandora::CartesianVector> ThreeDVertexingHoughTransform::Fit(const s
     std::vector<float> voteCounts(numSeeds, 0);
     std::vector<float> sortScores(numSeeds, 0);
 
-    // Simple vectors for positions, to help with cache locality.
     std::vector<float> vX(numVoters), vY(numVoters), vZ(numVoters);
     std::vector<float> voterLowerBoundSq(numVoters), voterUpperBoundSq(numVoters);
 
-    // Also store a weighting for each voter, based on the local density of hits around it.
     std::vector<float> voterWeights(numVoters, 1.0f);
     const float densityRadiusSq = 5.0f * 5.0f; // TODO: Param?
 
-    // Precompute the voter positions and their distance bounds for voting.
     for (int v = 0; v < numVoters; ++v)
     {
         const int idx = voterIndices[v];
@@ -213,8 +203,6 @@ std::vector<pandora::CartesianVector> ThreeDVertexingHoughTransform::Fit(const s
         voterWeights[v] = 1.0f / static_cast<float>(std::max(1, neighbors));
     }
 
-    // Voting loop - for each candidate, count how many voters are within the
-    // predicted distance (with tolerance).
     for (int s = 0; s < numSeeds; ++s)
     {
         const int seedIdx = seedIndices[s];
@@ -237,7 +225,6 @@ std::vector<pandora::CartesianVector> ThreeDVertexingHoughTransform::Fit(const s
         voteCounts[s] = votes;
     }
 
-    // Calculate sorting scores, to pick the best candidates first in NMS.
     this->CalculateSortScores(seedIndices, predClasses, voteCounts, logits, sortScores);
 
     std::vector<int> sortedCandIndices(numSeeds);

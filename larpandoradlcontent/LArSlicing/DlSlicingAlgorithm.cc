@@ -68,7 +68,6 @@ StatusCode DlSlicingAlgorithm::PrepareTrainingSample()
 
     const auto detectorBoundaries(LArGeometryHelper::GetDetectorBoundaries(this->GetPandora()));
 
-    // Ids are event-local: the order in which each MC particle / neutrino is first seen.
     std::map<const MCParticle *, int> particleIds, neutrinoIds;
     const auto getId = [](std::map<const MCParticle *, int> &ids, const MCParticle *pMCParticle)
     { return ids.try_emplace(pMCParticle, static_cast<int>(ids.size())).first->second; };
@@ -77,7 +76,6 @@ StatusCode DlSlicingAlgorithm::PrepareTrainingSample()
     constexpr int nValuesPerHit{14};
     const double nan{std::numeric_limits<double>::quiet_NaN()};
 
-    // The event level values come first, then every hit in turn.
     const double run{static_cast<double>(this->GetPandora().GetRun())};
     const double subrun{static_cast<double>(this->GetPandora().GetSubrun())};
     const double event{static_cast<double>(this->GetPandora().GetEvent())};
@@ -98,14 +96,11 @@ StatusCode DlSlicingAlgorithm::PrepareTrainingSample()
         featureVector.emplace_back(static_cast<double>(position.GetX()));
         featureVector.emplace_back(static_cast<double>(position.GetY()));
         featureVector.emplace_back(static_cast<double>(position.GetZ()));
-
-        // The model is given the input energy (the charge), scaled by 1 / 10.
         featureVector.emplace_back(static_cast<double>(pCaloHit->GetInputEnergy()));
 
         const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit *>(pCaloHit)};
         featureVector.emplace_back(pLArCaloHit ? static_cast<double>(pLArCaloHit->GetLArTPCVolumeId()) : static_cast<double>(missing));
 
-        // The dominant MC particle of the hit, and the share of the hit's weight it holds.
         const MCParticle *pDominant{nullptr};
         float dominantWeight{0.f}, totalWeight{0.f};
         if (pLArCaloHit)
@@ -125,7 +120,6 @@ StatusCode DlSlicingAlgorithm::PrepareTrainingSample()
         featureVector.emplace_back(pDominant ? static_cast<double>(getId(particleIds, pDominant)) : static_cast<double>(missing));
         featureVector.emplace_back(totalWeight > 0.f ? static_cast<double>(dominantWeight / totalWeight) : 0.);
 
-        // And the neutrino that particle came from, if any.
         const MCParticle *pNeutrino{nullptr};
         if (pDominant)
         {
@@ -165,8 +159,8 @@ StatusCode DlSlicingAlgorithm::PrepareTrainingSample()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProduceTrainingExample(m_trainingFileName, true, featureVector));
 
     std::cout << "DlSlicingAlgorithm::PrepareTrainingSample - run " << run << ", subrun " << subrun << ", event " << event << ": wrote "
-              << pCaloHitList->size() << " hits, " << nHitsWithNeutrino << " with a neutrino parent (" << neutrinoIds.size() << " neutrinos)"
-              << std::endl;
+              << pCaloHitList->size() << " hits, " << nHitsWithNeutrino << " with a neutrino parent (" << neutrinoIds.size()
+              << " neutrinos)" << std::endl;
 
     return STATUS_CODE_SUCCESS;
 }
@@ -202,35 +196,20 @@ StatusCode DlSlicingAlgorithm::Infer()
         LArDLHelper::TorchMultiOutput semanticOutput;
         LArDLHelper::Forward(m_modelFile, inputs, semanticOutput);
 
-        // Now, we can process the outputs.
-        // We should have 3 things:
-        //
-        // 1) Semantic logits for each node (i.e. hit). This represents the
-        // distance of each hit from its primary neutrino vertex.
-        //
-        // 2) The raw embeddings for each node. We don't need to do anything with
-        // these, except use them later on.
-        //
-        // 3) The encoded positions, same as above. Just saves re-computing them.
-        auto semanticLogits = semanticOutput.toTuple()->elements()[0].toTensor();
+        auto vertexLogits = semanticOutput.toTuple()->elements()[0].toTensor();
         auto hitEmbeddings = semanticOutput.toTuple()->elements()[1].toTensor();
         auto encodedPos = semanticOutput.toTuple()->elements()[2].toTensor();
         semanticOutput = LArDLHelper::TorchMultiOutput();
 
-        // Next, process the semantic logits with the NMS algorithm to extract
-        // candidate vertices.
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ExtractCandidateVertices(nodes, semanticLogits, candidateIndices));
+        if (this->ExtractCandidateVertices(nodes, vertexLogits, candidateIndices) != STATUS_CODE_SUCCESS)
+            return STATUS_CODE_FAILURE;
 
-        // Candidates sit on a hit, as they do in the Python training/validation flow.
         for (const int idx : candidateIndices)
             foundVertices.push_back(nodes[idx]);
 
-        // nodes is no longer needed after this point.
+        const int numCandidates = foundVertices.size();
         nodes.clear();
         nodes.shrink_to_fit();
-
-        // Start setting up the inputs for instance segmentation.
-        const int numCandidates = foundVertices.size();
 
         if (numCandidates == 0)
         {
@@ -238,21 +217,15 @@ StatusCode DlSlicingAlgorithm::Infer()
             return STATUS_CODE_SUCCESS;
         }
 
-        // Candidates are x, y, z, then the vertex score of the hit they sit on, and the
-        // distance to the nearest higher scoring candidate (units of 100 cm,
-        // capped at 3, and 3 if there is none). The candidates are already in
-        // descending score order, so the higher scoring ones are the earlier
-        // ones. This matches candidate_score_features in reconstruction.py.
         constexpr int numCandidateColumns = 5;
         const auto asFloat = torch::TensorOptions().dtype(torch::kFloat32);
         LArDLHelper::TorchInput candidateTensor;
         LArDLHelper::InitialiseInput({numCandidates, numCandidateColumns}, candidateTensor, asFloat);
         float *candidateTensorData = candidateTensor.data_ptr<float>();
 
-        const auto logits = semanticLogits.reshape({-1}).to(torch::kFloat32).contiguous();
+        const auto logits = vertexLogits.reshape({-1}).to(torch::kFloat32).contiguous();
         const float *logitData = logits.data_ptr<float>();
 
-        // Populate the candidate tensor with the positions of the found vertices.
         for (int i = 0; i < numCandidates; ++i)
         {
             float *row = candidateTensorData + i * numCandidateColumns;
@@ -268,40 +241,30 @@ StatusCode DlSlicingAlgorithm::Infer()
             row[4] = (i == 0) ? 3.f : std::min(minDistance / 100.f, 3.f);
         }
 
-        // Now, populate the full input tensor with all the required data:
-        // 1) The input features for each hit.
-        // 2) The raw embeddings for each hit.
-        // 3) The position embeddings for each hit.
-        // 4) The vertex logits for each hit.
-        // 5) The candidate vertex positions.
-        // This order matches predict_instances in the exported model.
+        // ATTN: Populate the final input tensor with per hit features, embeddings,
+        // position encodings, vertex logits, and candidate vertex positions.
         inputs.clear();
         LArDLHelper::TorchInputVector fullInputTensor;
         fullInputTensor.push_back(std::move(xTensor));
         fullInputTensor.push_back(std::move(hitEmbeddings));
         fullInputTensor.push_back(std::move(encodedPos));
-        fullInputTensor.push_back(std::move(semanticLogits));
+        fullInputTensor.push_back(std::move(vertexLogits));
         fullInputTensor.push_back(std::move(candidateTensor));
 
-        // Okay, we are good to go!
         LArDLHelper::TorchOutput instanceOutput;
         LArDLHelper::Forward(m_modelFile, fullInputTensor, instanceOutput, "predict_instances");
         fullInputTensor.clear();
 
-        // Every hit is assigned to its highest scoring candidate (argmax of the
-        // logits is the same as of the sigmoid).
         instancePreds = torch::argmax(instanceOutput, 1).contiguous();
         instanceOutput = at::Tensor();
     }
 
-    // Final cluster labels.
     std::vector<int> finalLabels(numHits, -1);
     const int64_t *predsData = instancePreds.data_ptr<int64_t>();
 
     for (unsigned int i = 0; i < numHits; ++i)
         finalLabels[i] = static_cast<int>(predsData[i]);
 
-    // Build the final cluster -> hit map, so we can save it.
     std::map<int, std::list<const CaloHit *>> clusterHitsMap;
     int hitIdx = 0;
     for (const auto pCaloHit : *pCaloHitList)
@@ -316,11 +279,6 @@ StatusCode DlSlicingAlgorithm::Infer()
         ++hitIdx;
     }
 
-    // For now...lets just write out a new Cluster list, with one cluster per
-    // predicted instance.
-    // This will likely eventually need to be made into a LArRecoND algorithm,
-    // that is based on EventSlicingThreeD, but this will work for now
-    // and we can have a basic LArRecoND tool that just loads this cluster list.
     const ClusterList *pClusterList(nullptr);
     std::string temporaryListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, temporaryListName));
@@ -342,9 +300,6 @@ StatusCode DlSlicingAlgorithm::Infer()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_outputClusterListName));
     }
 
-    // We should also write out the predicted vertices to a new output list, as
-    // they may be useful for seeding later algorithms, even if the instance
-    // segmentation fails.
     const VertexList *pVertexList(nullptr);
     temporaryListName.clear();
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
@@ -376,7 +331,6 @@ StatusCode DlSlicingAlgorithm::GetNodeData(const CaloHitList &caloHits, std::vec
     pos.reserve(caloHits.size());
     nodeFeatures.reserve(caloHits.size());
 
-    // Populate the positional and node feature vectors from the CaloHits.
     for (const auto pCaloHit : caloHits)
     {
         if (nullptr == pCaloHit)
@@ -403,13 +357,12 @@ StatusCode DlSlicingAlgorithm::BuildInput(LArDLHelper::TorchInputVector &inputs,
     posTensor = torch::empty({numNodes, 3}, torch::kFloat32);
     xTensor = torch::empty({numNodes, numFeatures}, torch::kFloat32);
 
-    // INFO: Fake batch tensor (i.e. our batch size is 1 in inference)
+    // ATTN: Fake batch tensor (inference only has a single batch)
     torch::Tensor batchTensor = torch::zeros(numNodes, torch::kLong);
 
     float *posTensorPtr = posTensor.data_ptr<float>();
     float *xTensorPtr = xTensor.data_ptr<float>();
 
-    // Fill in the position and node feature tensors...
     for (int i = 0; i < numNodes; ++i)
     {
         posTensorPtr[i * 3 + 0] = pos[i].GetX();
@@ -418,7 +371,6 @@ StatusCode DlSlicingAlgorithm::BuildInput(LArDLHelper::TorchInputVector &inputs,
         xTensorPtr[i] = nodeFeatures[i][0];
     }
 
-    // Finally, stick them together into the input vector.
     inputs.insert(inputs.end(), {xTensor, posTensor, batchTensor});
 
     return STATUS_CODE_SUCCESS;
@@ -427,17 +379,15 @@ StatusCode DlSlicingAlgorithm::BuildInput(LArDLHelper::TorchInputVector &inputs,
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DlSlicingAlgorithm::ExtractCandidateVertices(
-    const std::vector<CartesianVector> &pos, const torch::Tensor &semLogits, std::vector<int> &candidateHitIdx) const
+    const std::vector<CartesianVector> &pos, const torch::Tensor &vertexLogits, std::vector<int> &candidateHitIdx) const
 {
     candidateHitIdx.clear();
 
-    const auto logits = semLogits.reshape({-1}).to(torch::kFloat32).contiguous();
+    const auto logits = vertexLogits.reshape({-1}).to(torch::kFloat32).contiguous();
     if (static_cast<size_t>(logits.size(0)) != pos.size())
         return STATUS_CODE_INVALID_PARAMETER;
 
     const float *logitData = logits.data_ptr<float>();
-
-    // sigmoid(l) > t  <=>  l > logit(t)
     const float logitCut = std::log(m_vertexScoreThreshold / (1.f - m_vertexScoreThreshold));
 
     std::vector<int> valid;
@@ -447,7 +397,6 @@ StatusCode DlSlicingAlgorithm::ExtractCandidateVertices(
             valid.push_back(static_cast<int>(i));
     }
 
-    // Highest score first...
     std::stable_sort(valid.begin(), valid.end(), [&](const int a, const int b) { return logitData[a] > logitData[b]; });
 
     const float radiusSq = m_nmsRadius * m_nmsRadius;
@@ -477,7 +426,6 @@ StatusCode DlSlicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode", m_trainingMode));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_caloHitListName));
 
-    // In training mode there is no model and no output lists, just the hits and their truth appended to a CSV file.
     if (m_trainingMode)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingFileName", m_trainingFileName));
@@ -497,7 +445,5 @@ StatusCode DlSlicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     return STATUS_CODE_SUCCESS;
 }
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
 
 } // namespace lar_dl_content

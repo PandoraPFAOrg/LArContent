@@ -30,8 +30,7 @@ public:
      * @param useDynamicSeedClass If true, dynamically finds the closest available class to use as seeds
      */
     ThreeDVertexingHoughTransform(const std::vector<float> &thresholds, const float scalingFactor = 400.0f, const float tolerance = 25.0f,
-        const int minVotes = 3, const float nmsRadius = 35.0f, const int maxSeedClass = 2,
-        const bool useDynamicSeedClass = false);
+        const int minVotes = 3, const float nmsRadius = 35.0f, const int maxSeedClass = 2, const bool useDynamicSeedClass = false);
 
     /**
      * @brief Finds vertices based on hit positions and network distance logits
@@ -55,14 +54,14 @@ private:
     void CalculateSortScores(const std::vector<int> &seedIndices, const std::vector<int> &predClasses, const std::vector<float> &voteCounts,
         const std::vector<float> &logits, std::vector<float> &sortScores) const;
 
-    std::vector<float> m_thresholds;    ///< The distance thresholds for each class bin edge. Must match the training thresholds.
-    std::vector<float> m_binCenters;    ///< The pre-computed bin centers for each class, derived from the thresholds, used to convert class predictions to distance predictions.
-    float m_scalingFactor;              ///< The scaling factor to convert the network output back to physical units, if needed.
-    float m_tolerance;                  ///< The distance tolerance for a vote to count for a given seed.
-    int m_minVotes;                     ///< The minimum number of votes required for a seed to be kept as a vertex.
-    int m_maxSeedClass;                 ///< The maximum distance class to consider as a seed for vertex finding.
-    bool m_useDynamicSeedClass;         ///< Whether to dynamically find the closest available class to use as seeds, if no seeds are found with the specified maxSeedClass.
-    float m_nmsRadiusSq;                ///< Stored as squared radius for faster comparison
+    std::vector<float> m_thresholds; ///< The distance thresholds for each class bin edge. Must match the training thresholds.
+    std::vector<float> m_binCenters; ///< The pre-computed bin centers for each class, derived from the thresholds, used to convert class predictions to distance predictions.
+    float m_scalingFactor; ///< The scaling factor to convert the network output back to physical units, if needed.
+    float m_tolerance;     ///< The distance tolerance for a vote to count for a given seed.
+    int m_minVotes;        ///< The minimum number of votes required for a seed to be kept as a vertex.
+    int m_maxSeedClass;    ///< The maximum distance class to consider as a seed for vertex finding.
+    bool m_useDynamicSeedClass; ///< Whether to dynamically find the closest available class to use as seeds, if no seeds are found with the specified maxSeedClass.
+    float m_nmsRadiusSq; ///< Stored as squared radius for faster comparison
 };
 
 } // namespace lar_content

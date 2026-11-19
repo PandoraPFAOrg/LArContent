@@ -60,11 +60,11 @@ private:
      *  @brief Extract candidate vertices from the model output, using NMS.
      *
      *  @param pos The positions of the nodes.
-     *  @param semLogits The vertex logits for each node (shape [N, 1]).
+     *  @param vertexLogits The vertex logits for each node (shape [N, 1]).
      *  @param candidateHitIdx The indices of the hits chosen as candidate vertices, highest score first (cleared on entry).
      */
     pandora::StatusCode ExtractCandidateVertices(
-        const std::vector<pandora::CartesianVector> &pos, const torch::Tensor &semLogits, std::vector<int> &candidateHitIdx) const;
+        const std::vector<pandora::CartesianVector> &pos, const torch::Tensor &vertexLogits, std::vector<int> &candidateHitIdx) const;
 
     LArDLHelper::TorchModel m_modelFile; ///< The model to use.
 
