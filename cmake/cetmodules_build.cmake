@@ -131,6 +131,8 @@ if(PANDORA_LIBTORCH)
     larpandoradlcontent/LArTrackShowerId
     larpandoradlcontent/LArTwoDReco
     larpandoradlcontent/LArVertex
+    larpandoradlcontent/LArThreeDVertex
+    larpandoradlcontent/LArSlicing
   )
   install_source(SUBDIRS ${LAR_DL_DIRS})
   install_headers(SUBDIRS ${LAR_DL_DIRS})
